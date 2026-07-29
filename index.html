@@ -1994,8 +1994,11 @@ function updatePageDate() {
   var weekStr = '周' + weekDays[now.getDay()];
   var dateSpan = document.querySelector('.header-date');
   if (dateSpan) {
-    var text = dateSpan.textContent;
-    dateSpan.textContent = dateStr + ' ' + weekStr + ' | ' + text.split('|').pop().trim();
+    // Find the first span child (date display) and update it
+    var firstSpan = dateSpan.querySelector('span:not(.live-dot):not(#updateTime)');
+    if (firstSpan) {
+      firstSpan.textContent = dateStr + ' ' + weekStr;
+    }
   }
 }
 
