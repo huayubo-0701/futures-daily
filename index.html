@@ -1,0 +1,3625 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>每日期货读盘 | 2026年7月28日</title>
+<style>
+:root {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-card: #1c2128;
+  --bg-hover: #21262d;
+  --bg-tertiary: #1a1f26;
+  --border-color: #30363d;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --red: #f85149;
+  --red-bg: rgba(248, 81, 73, 0.1);
+  --green: #3fb950;
+  --green-bg: rgba(63, 185, 80, 0.1);
+  --gold: #d4a843;
+  --gold-bg: rgba(212, 168, 67, 0.08);
+  --blue: #58a6ff;
+  --blue-bg: rgba(88, 166, 255, 0.08);
+  --orange: #f0883e;
+  --orange-bg: rgba(240, 136, 62, 0.1);
+  --purple: #bc8cff;
+  --purple-bg: rgba(188, 140, 255, 0.08);
+  --teal: #2dd4bf;
+  --teal-bg: rgba(45, 212, 191, 0.08);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--blue); text-decoration: none; transition: color 0.2s; }
+a:hover { color: var(--purple); text-decoration: underline; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #1a1f2e 0%, #0d1117 100%);
+  border-bottom: 1px solid var(--border-color);
+  padding: 28px 0 20px;
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(12px);
+}
+.header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+.header-title { font-size: 26px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.header-date { color: var(--text-secondary); font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.live-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(63,185,80,0.4)} 50%{opacity:0.7;box-shadow:0 0 0 6px rgba(63,185,80,0)} }
+.update-time { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+/* === Refresh bar & live ticker === */
+.refresh-bar {
+  display: flex; align-items: center; gap: 12px; margin-top: 14px;
+  flex-wrap: wrap;
+}
+.refresh-btn {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff; border: none; border-radius: 8px;
+  padding: 8px 18px; font-size: 13px; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center; gap: 6px;
+  transition: all 0.2s; white-space: nowrap;
+}
+.refresh-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.35); }
+.refresh-btn:active { transform: translateY(0); }
+.refresh-btn.loading { opacity: 0.7; pointer-events: none; }
+.refresh-btn.loading .refresh-icon { animation: spin 0.8s linear infinite; }
+.refresh-btn.disabled { background: var(--bg-tertiary); color: var(--text-muted); cursor: not-allowed; opacity: 0.45; pointer-events: none; box-shadow: none; transform: none; }
+@keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+.refresh-icon { display: inline-block; font-size: 15px; }
+
+.auto-toggle {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-muted); cursor: pointer;
+  user-select: none; transition: opacity 0.2s;
+}
+.auto-toggle.disabled { opacity: 0.35; pointer-events: none; cursor: not-allowed; }
+.auto-toggle input { display: none; }
+.auto-toggle .switch {
+  width: 34px; height: 18px; background: var(--bg-tertiary);
+  border-radius: 10px; position: relative; transition: 0.2s;
+  border: 1px solid var(--border-color);
+}
+.auto-toggle .switch::after {
+  content: ''; position: absolute; top: 1px; left: 1px;
+  width: 14px; height: 14px; background: var(--text-muted);
+  border-radius: 50%; transition: 0.2s;
+}
+.auto-toggle input:checked + .switch { background: #2563eb; }
+.auto-toggle input:checked + .switch::after { left: 17px; background: #fff; }
+.auto-toggle .switch.sm { width: 28px; height: 14px; }
+.auto-toggle .switch.sm::after { width: 10px; height: 10px; }
+.auto-toggle input:checked + .switch.sm::after { left: 15px; }
+
+.last-refresh { font-size: 12px; color: var(--text-muted); }
+.last-refresh .ok { color: var(--green); }
+.last-refresh .err { color: var(--red); }
+
+.market-status {
+  font-size: 11px; padding: 2px 8px; border-radius: 4px;
+  font-weight: 600; white-space: nowrap;
+}
+.market-status.open { background: rgba(63,185,80,0.15); color: var(--green); }
+.market-status.closed { background: rgba(255,159,28,0.15); color: var(--orange); }
+
+/* Market mode banner */
+.market-mode-banner {
+  display: flex; align-items: center; gap: 8px;
+  border-radius: 8px; padding: 8px 14px; margin-top: 8px;
+  font-size: 13px; font-weight: 600; border: 1px solid;
+}
+.market-mode-banner.closed {
+  background: rgba(240, 136, 62, 0.08); border-color: rgba(240, 136, 62, 0.25); color: var(--orange);
+}
+.market-mode-banner.open {
+  background: rgba(63, 185, 80, 0.08); border-color: rgba(63, 185, 80, 0.25); color: var(--green);
+}
+.market-mode-banner .icon { font-size: 16px; }
+.market-mode-banner .sub { font-size: 11px; color: var(--text-muted); font-weight: 400; margin-left: 4px; }
+
+/* Market closed banner (deprecated, kept for compat) */
+.market-closed-banner { display: none; }
+
+/* Live ticker strip */
+.live-ticker-wrap {
+  background: var(--bg-secondary); border: 1px solid var(--border-color);
+  border-radius: 8px; margin-top: 12px; overflow: hidden;
+}
+.live-ticker-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 12px; font-size: 11px; color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+}
+.live-ticker-header .dot-live {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted);
+  display: inline-block; margin-right: 4px;
+}
+.live-ticker-header .dot-live.active { background: var(--green); animation: pulse 2s infinite; }
+.live-ticker {
+  display: flex; gap: 0; overflow-x: auto; padding: 8px 0;
+  scrollbar-width: thin;
+}
+.live-ticker::-webkit-scrollbar { height: 4px; }
+.live-ticker::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
+.ticker-item {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 4px 14px; border-right: 1px solid var(--border-color);
+  min-width: 100px; flex-shrink: 0;
+}
+.ticker-item a { text-decoration: none; color: inherit; }
+.ticker-name { font-size: 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+.ticker-code { font-size: 10px; color: var(--text-muted); }
+.ticker-price { font-size: 14px; font-weight: 700; font-family: "SF Mono", monospace; margin-top: 2px; }
+.ticker-chg { font-size: 11px; font-family: "SF Mono", monospace; margin-top: 1px; }
+.ticker-item .up { color: var(--red); }
+.ticker-item .down { color: var(--green); }
+.ticker-item .flat { color: var(--text-muted); }
+.ticker-item.loading-state .ticker-price { color: var(--text-muted); font-size: 12px; }
+.ticker-updated { animation: flash-green 0.6s ease; }
+@keyframes flash-green { 0%{background:rgba(63,185,80,0.2)} 100%{background:transparent} }
+
+/* Snapshot vs live badge */
+.snapshot-badge {
+  font-size: 10px; padding: 1px 6px; border-radius: 3px;
+  background: rgba(255,159,28,0.15); color: var(--orange);
+  margin-left: 4px; white-space: nowrap;
+}
+
+/* Real-time news flash */
+.news-flash-wrap {
+  margin-bottom: 20px; border: 1px solid var(--border-color);
+  border-radius: 10px; overflow: hidden; background: var(--bg-card);
+}
+.news-flash-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 16px; background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+}
+.news-flash-header .title {
+  font-size: 13px; font-weight: 700; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 6px;
+}
+.news-flash-header .title .dot-news {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted);
+  display: inline-block;
+}
+.news-flash-header .title .dot-news.active {
+  background: var(--red); animation: pulse 2s infinite;
+}
+.news-flash-header .meta {
+  font-size: 11px; color: var(--text-muted);
+  display: flex; align-items: center; gap: 8px;
+}
+.news-flash-header .meta .refresh-news-btn {
+  font-size: 11px; padding: 2px 8px; border-radius: 4px;
+  border: 1px solid var(--border-color); background: transparent;
+  color: var(--text-secondary); cursor: pointer; transition: all 0.2s;
+}
+.news-flash-header .meta .refresh-news-btn:hover { border-color: var(--blue); color: var(--blue); }
+.news-flash-header .meta .refresh-news-btn.loading { opacity: 0.6; pointer-events: none; }
+.news-flash-list {
+  max-height: 320px; overflow-y: auto; padding: 8px 0;
+}
+.news-flash-list::-webkit-scrollbar { width: 4px; }
+.news-flash-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
+.news-item {
+  padding: 8px 16px; border-bottom: 1px solid rgba(255,255,255,0.03);
+  transition: background 0.2s; display: flex; gap: 10px; align-items: flex-start;
+}
+.news-item:hover { background: rgba(255,255,255,0.02); }
+.news-item:last-child { border-bottom: none; }
+.news-item .news-time {
+  font-size: 11px; color: var(--text-muted); font-family: "SF Mono", monospace;
+  white-space: nowrap; min-width: 52px; padding-top: 1px;
+}
+.news-item .news-content { flex: 1; min-width: 0; }
+.news-item .news-title-row {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.news-item .news-title {
+  font-size: 13px; color: var(--text-primary); font-weight: 500;
+  line-height: 1.4; cursor: pointer;
+}
+.news-item .news-title:hover { color: var(--blue); }
+.news-item .news-tag {
+  font-size: 10px; padding: 1px 5px; border-radius: 3px; white-space: nowrap;
+  font-weight: 600;
+}
+.news-item .news-tag.tag-energy { background: rgba(255,99,71,0.15); color: #ff6347; }
+.news-item .news-tag.tag-metals { background: rgba(255,185,28,0.15); color: var(--orange); }
+.news-item .news-tag.tag-black { background: rgba(136,136,136,0.2); color: #aaa; }
+.news-item .news-tag.tag-agri { background: rgba(63,185,80,0.15); color: var(--green); }
+.news-item .news-tag.tag-precious { background: rgba(255,215,0,0.15); color: #ffd700; }
+.news-item .news-tag.tag-macro { background: rgba(37,99,235,0.15); color: var(--blue); }
+.news-item .news-tag.tag-futures { background: rgba(168,85,247,0.15); color: #a855f7; }
+.news-item .news-digest {
+  font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.news-item.news-updated { animation: flash-green 0.6s ease; }
+.news-empty { padding: 20px; text-align: center; color: var(--text-muted); font-size: 12px; }
+
+/* Toggle */
+.toggle-bar {
+  display: flex; gap: 4px; background: var(--bg-card);
+  border: 1px solid var(--border-color); border-radius: 10px;
+  padding: 4px; margin-top: 16px;
+}
+.toggle-btn {
+  flex: 1; padding: 12px 20px; text-align: center; border: none;
+  background: transparent; color: var(--text-secondary);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  border-radius: 7px; transition: all 0.3s;
+}
+.toggle-btn.active { background: linear-gradient(135deg, #2563eb, #1a4fc4); color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,0.3); }
+.toggle-btn .badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; background: rgba(255,255,255,0.15); }
+.toggle-btn .sub { font-size: 11px; color: var(--text-muted); font-weight: 400; display: block; margin-top: 2px; }
+.toggle-btn.active .sub { color: rgba(255,255,255,0.7); }
+
+/* Mode visibility */
+.personal-view { display: none; }
+.institutional-view { display: none; }
+body.mode-personal .personal-view { display: block; }
+body.mode-institutional .institutional-view { display: block; }
+
+/* Section */
+.section { margin-top: 28px; margin-bottom: 8px; }
+.section-title {
+  font-size: 20px; font-weight: 700; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+  padding-bottom: 10px; border-bottom: 2px solid var(--border-color);
+}
+.section-title .tag { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 500; margin-left: 4px; }
+.section-title .refresh-news-btn {
+  background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-secondary);
+  border-radius: 6px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.section-title .refresh-news-btn:hover { border-color: var(--blue); color: var(--blue); }
+.section-title .refresh-news-btn.loading { opacity: 0.6; pointer-events: none; }
+.tag-energy { background: var(--orange); color: #fff; }
+.tag-metal { background: var(--blue); color: #fff; }
+.tag-black { background: var(--text-muted); color: #fff; }
+.tag-agri { background: var(--green); color: #fff; }
+.tag-gold { background: var(--gold); color: #1a1a1a; }
+.tag-intl { background: var(--purple); color: #fff; }
+.tag-risk-high { background: var(--red); color: #fff; }
+.tag-risk-medium { background: var(--orange); color: #fff; }
+.tag-risk-low { background: var(--green); color: #fff; }
+
+/* === Personal View Styles === */
+/* Temperature meter */
+.temp-meter {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 8px;
+}
+.temp-card {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: 10px; padding: 16px; text-align: center;
+  transition: all 0.25s;
+}
+.temp-card.clickable { cursor: pointer; position: relative; }
+.temp-card.clickable:hover { border-color: var(--blue); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+.temp-card.clickable::after {
+  content: '▼ 点击展开'; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+  font-size: 9px; color: var(--text-muted); white-space: nowrap; opacity: 0; transition: opacity 0.2s;
+}
+.temp-card.clickable:hover::after { opacity: 1; }
+.temp-card.active-card { border-color: var(--blue); background: var(--blue-bg); }
+.temp-card .icon { font-size: 28px; }
+.temp-card .num { font-size: 28px; font-weight: 800; font-family: "SF Mono", monospace; margin-top: 4px; }
+.temp-card .label { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+/* Expandable futures list panel */
+.futures-panel {
+  display: none; margin-top: 12px; padding: 16px;
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: 10px; animation: slideDown 0.3s ease;
+}
+.futures-panel.show { display: block; }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+.futures-panel-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color);
+}
+.futures-panel-title { font-size: 14px; font-weight: 600; }
+.futures-panel-close {
+  background: none; border: 1px solid var(--border-color); border-radius: 6px;
+  color: var(--text-secondary); font-size: 12px; padding: 4px 10px; cursor: pointer; transition: all 0.2s;
+}
+.futures-panel-close:hover { border-color: var(--red); color: var(--red); }
+.futures-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.futures-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 8px; font-size: 13px;
+  border: 1px solid var(--border-color); background: var(--bg-secondary);
+  transition: all 0.2s; text-decoration: none;
+}
+.futures-chip:hover { transform: translateY(-1px); text-decoration: none; }
+.futures-chip .chip-name { font-weight: 600; }
+.futures-chip .chip-code { font-size: 10px; color: var(--text-muted); font-family: "SF Mono", monospace; }
+.futures-chip .chip-change { font-size: 11px; font-weight: 700; font-family: "SF Mono", monospace; }
+.futures-chip.up { border-left: 3px solid var(--red); }
+.futures-chip.up:hover { border-color: var(--red); background: var(--red-bg); }
+.futures-chip.up .chip-change { color: var(--red); }
+.futures-chip.down { border-left: 3px solid var(--green); }
+.futures-chip.down:hover { border-color: var(--green); background: var(--green-bg); }
+.futures-chip.down .chip-change { color: var(--green); }
+.futures-chip.crash { border-left: 3px solid var(--red); background: var(--red-bg); }
+.futures-chip.crash:hover { border-color: var(--red); box-shadow: 0 2px 8px rgba(248,81,73,0.2); }
+.futures-chip.crash .chip-change { color: var(--red); }
+.futures-chip .chip-arrow { font-size: 10px; color: var(--text-muted); }
+.futures-chip:hover .chip-arrow { color: var(--blue); }
+.futures-chip .chip-sector { font-size: 9px; padding: 1px 5px; border-radius: 3px; color: #fff; }
+
+/* Big focus card */
+.focus-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+.focus-card {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: 12px; padding: 18px; transition: border-color 0.2s, transform 0.2s;
+  position: relative; overflow: hidden;
+}
+.focus-card:hover { border-color: var(--text-muted); transform: translateY(-2px); }
+.focus-card.up-trend { border-left: 4px solid var(--red); }
+.focus-card.down-trend { border-left: 4px solid var(--green); }
+.focus-card.neutral-trend { border-left: 4px solid var(--text-muted); }
+.focus-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.focus-name { font-size: 18px; font-weight: 700; }
+.focus-name a { color: var(--text-primary); }
+.focus-name a::after { content: " ↗"; font-size: 12px; opacity: 0.5; color: var(--blue); }
+.focus-price-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.focus-price { font-size: 32px; font-weight: 800; font-family: "SF Mono", monospace; }
+.focus-change { font-size: 15px; font-weight: 600; }
+.focus-range { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+.focus-action {
+  display: inline-block; font-size: 13px; font-weight: 700; padding: 6px 14px;
+  border-radius: 6px; margin-bottom: 8px;
+}
+.action-watch { background: var(--bg-hover); color: var(--text-secondary); border: 1px solid var(--border-color); }
+.action-buy { background: var(--red-bg); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
+.action-sell { background: var(--green-bg); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+.action-caution { background: var(--orange-bg); color: var(--orange); border: 1px solid rgba(240,136,62,0.3); }
+.focus-reason { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+.focus-reason strong { color: var(--text-primary); }
+
+/* Life impact */
+.life-card {
+  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+  border: 1px solid var(--border-color); border-radius: 10px;
+  padding: 16px 18px; margin-bottom: 12px;
+}
+.life-card .q { font-size: 15px; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.life-card .a { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+.life-card .a strong { color: var(--text-primary); }
+
+/* Gold buying guide (personal) */
+.gold-guide-card {
+  background: linear-gradient(135deg, rgba(212,168,67,0.06) 0%, var(--bg-card) 100%);
+  border: 1px solid rgba(212,168,67,0.2); border-radius: 10px;
+  padding: 16px 18px; margin-bottom: 12px;
+}
+.gold-guide-card .channel { font-size: 15px; font-weight: 700; color: var(--gold); margin-bottom: 4px; }
+.gold-guide-card .price { font-size: 22px; font-weight: 800; font-family: "SF Mono", monospace; color: var(--gold); }
+.gold-guide-card .desc { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+.gold-guide-card .verdict {
+  display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px;
+  border-radius: 4px; margin-top: 6px;
+}
+.verdict-best { background: var(--green-bg); color: var(--green); }
+.verdict-ok { background: var(--blue-bg); color: var(--blue); }
+.verdict-avoid { background: var(--red-bg); color: var(--red); }
+
+/* === Institutional View Styles === */
+/* Full data table */
+.table-wrap {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: 10px; overflow: hidden; margin-bottom: 20px;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+  background: var(--bg-secondary); padding: 10px 12px; text-align: left;
+  font-weight: 600; color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color); white-space: nowrap;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); font-family: "SF Mono", "Consolas", monospace; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg-hover); }
+.futures-link { font-weight: 600; font-family: -apple-system, "PingFang SC", sans-serif; }
+.futures-link::after { content: " ↗"; font-size: 11px; opacity: 0.6; }
+.contract-code { font-size: 11px; color: var(--text-muted); }
+.up { color: var(--red); }
+.down { color: var(--green); }
+
+/* Event cards (institutional detailed) */
+.event-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
+.event-card {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-left: 3px solid var(--blue); border-radius: 8px;
+  padding: 16px 18px; margin-bottom: 0;
+}
+.event-card.energy-event { border-left-color: var(--orange); }
+.event-card.gold-event { border-left-color: var(--gold); }
+.event-card.macro-event { border-left-color: var(--blue); }
+.event-card.geopolitical-event { border-left-color: var(--red); }
+.event-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.event-title { font-size: 15px; font-weight: 700; }
+.event-tag { font-size: 10px; padding: 2px 7px; border-radius: 3px; font-weight: 600; }
+.event-tag-energy { background: rgba(255,152,0,0.15); color: var(--orange); }
+.event-tag-macro { background: rgba(88,166,255,0.15); color: var(--blue); }
+.event-tag-geo { background: rgba(255,107,107,0.15); color: var(--red); }
+.event-tag-gold { background: rgba(255,215,0,0.15); color: var(--gold); }
+.event-impact { font-size: 10px; padding: 2px 7px; border-radius: 3px; font-weight: 600; }
+.event-body { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+.event-source { font-size: 11px; color: var(--text-muted); margin-top: 8px; }
+.impact-high { background: var(--red-bg); color: var(--red); }
+.impact-medium { background: var(--orange); color: #fff; opacity: 0.85; }
+.impact-low { background: var(--green-bg); color: var(--green); }
+.event-body { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+.event-body strong { color: var(--text-primary); }
+.event-source { margin-top: 10px; font-size: 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.event-source a { color: var(--text-muted); text-decoration: underline; text-underline-offset: 2px; }
+.event-source a:hover { color: var(--blue); }
+
+/* Analysis box */
+.analysis-box {
+  background: var(--bg-secondary); border: 1px solid var(--border-color);
+  border-radius: 8px; padding: 16px; margin-top: 12px;
+}
+.analysis-box h4 { font-size: 14px; margin-bottom: 8px; color: var(--blue); }
+.analysis-box p { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+.analysis-box ul { margin-left: 18px; margin-top: 6px; }
+.analysis-box li { font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; }
+
+/* Strategy matrix */
+.strategy-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.strategy-card {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: 10px; padding: 16px;
+}
+.strategy-card .s-name { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.strategy-card .s-name a { color: var(--text-primary); }
+.strategy-card .s-dir { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
+.s-long { background: var(--red-bg); color: var(--red); }
+.s-short { background: var(--green-bg); color: var(--green); }
+.s-neutral { background: var(--bg-hover); color: var(--text-secondary); }
+.strategy-card .s-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+.strategy-card .s-label { color: var(--text-muted); }
+.strategy-card .s-val { font-family: "SF Mono", monospace; font-weight: 600; }
+.strategy-card .s-note { font-size: 12px; color: var(--text-secondary); margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border-color); }
+
+/* Macro calendar */
+.macro-cal { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.macro-item {
+  display: flex; gap: 12px; align-items: center;
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: 8px; padding: 12px 16px;
+}
+.macro-date { font-size: 13px; font-weight: 700; color: var(--blue); white-space: nowrap; min-width: 100px; }
+.macro-name { font-size: 13px; color: var(--text-secondary); flex: 1; }
+.macro-impact { font-size: 11px; padding: 2px 8px; border-radius: 3px; font-weight: 600; }
+
+/* Spread/arb table */
+.spread-table td { font-size: 12px; }
+.spread-table .spread-val { font-weight: 700; }
+
+/* Gold section institutional */
+.gold-inst-card {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: 10px; padding: 16px; margin-bottom: 12px;
+}
+.gold-inst-card h4 { font-size: 15px; color: var(--gold); margin-bottom: 10px; }
+
+/* Summary cards (shared) */
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; margin-bottom: 8px; }
+.summary-card {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: 10px; padding: 16px;
+}
+.summary-card .label { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+.summary-card .value { font-size: 22px; font-weight: 700; font-family: "SF Mono", monospace; }
+.summary-card .change { font-size: 13px; margin-top: 4px; font-weight: 600; }
+
+/* Quick Nav */
+.quick-nav { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
+.quick-nav a {
+  font-size: 12px; padding: 5px 12px; background: var(--bg-card);
+  border: 1px solid var(--border-color); border-radius: 20px;
+  color: var(--text-secondary); transition: all 0.2s;
+}
+.quick-nav a:hover { border-color: var(--blue); color: var(--blue); text-decoration: none; }
+
+/* Disclaimer */
+.disclaimer {
+  margin-top: 32px; padding: 20px; background: var(--bg-card);
+  border: 1px solid var(--border-color); border-radius: 10px;
+  font-size: 12px; color: var(--text-muted); line-height: 1.8;
+}
+.disclaimer strong { color: var(--text-secondary); }
+
+/* Gold price tiers (shared) */
+.gold-price-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.gold-price-card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; }
+.gold-price-card .title { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.gold-price-card .price { font-size: 20px; font-weight: 700; color: var(--gold); font-family: "SF Mono", monospace; }
+.gold-price-card .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* Trade opportunity table (personal) */
+.trade-table { font-size: 12px; }
+.trade-table th { font-size: 10px; }
+.trade-table td { padding: 8px 10px; font-size: 12px; }
+.trade-rank { font-weight: 800; font-size: 16px; text-align: center; }
+.trade-table .trade-link { font-weight: 700; font-family: -apple-system, "PingFang SC", sans-serif; }
+.trade-table .trade-link::after { content: " ↗"; font-size: 10px; opacity: 0.6; }
+.trade-rr { font-weight: 700; }
+.trade-rr.good { color: var(--green); }
+.trade-rr.ok { color: var(--blue); }
+.trade-rr.poor { color: var(--orange); }
+.overnight-yes { color: var(--green); font-weight: 600; }
+.overnight-no { color: var(--red); font-weight: 600; }
+.overnight-caution { color: var(--orange); font-weight: 600; }
+
+/* Attribution table (personal) */
+.attr-table td { font-size: 12px; padding: 8px 10px; }
+.attr-reason { color: var(--text-secondary); }
+
+/* Key levels (personal) */
+.key-level-card {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: 10px; padding: 14px 16px;
+}
+.key-level-card .kl-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.key-level-card .kl-name { font-size: 15px; font-weight: 700; }
+.key-level-card .kl-name a { color: var(--text-primary); }
+.key-level-card .kl-name a::after { content: " ↗"; font-size: 11px; opacity: 0.5; color: var(--blue); }
+.key-level-card .kl-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.key-level-card .kl-row { display: flex; justify-content: space-between; font-size: 12px; }
+.key-level-card .kl-label { color: var(--text-muted); }
+.key-level-card .kl-val { font-family: "SF Mono", monospace; font-weight: 600; }
+.key-level-card .kl-note { font-size: 11px; color: var(--text-secondary); margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border-color); }
+
+/* News timeline (institutional) */
+.timeline { position: relative; padding-left: 24px; }
+.timeline::before { content: ""; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--border-color); }
+.timeline-item { position: relative; margin-bottom: 16px; }
+.timeline-item::before { content: ""; position: absolute; left: -20px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--blue); border: 2px solid var(--bg-primary); }
+.timeline-item.high-impact::before { background: var(--red); }
+.timeline-item.med-impact::before { background: var(--orange); }
+.timeline-time { font-size: 12px; font-weight: 700; color: var(--blue); font-family: "SF Mono", monospace; }
+.timeline-item.high-impact .timeline-time { color: var(--red); }
+.timeline-item.med-impact .timeline-time { color: var(--orange); }
+.timeline-content { font-size: 13px; color: var(--text-secondary); margin-top: 2px; line-height: 1.6; }
+.timeline-content strong { color: var(--text-primary); }
+.timeline-source { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* Exchange announcement (institutional) */
+.announce-card {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-left: 3px solid var(--orange); border-radius: 8px;
+  padding: 12px 16px; margin-bottom: 10px;
+}
+.announce-card .ann-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.announce-card .ann-exchange { font-size: 11px; padding: 2px 8px; border-radius: 3px; font-weight: 600; background: var(--orange-bg); color: var(--orange); }
+.announce-card .ann-title { font-size: 13px; font-weight: 700; }
+.announce-card .ann-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+.announce-card .ann-body strong { color: var(--text-primary); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header-title { font-size: 20px; }
+  .summary-grid, .focus-grid { grid-template-columns: 1fr; }
+  .temp-meter { grid-template-columns: repeat(2, 1fr); }
+  th, td { padding: 8px; font-size: 11px; }
+  .gold-price-grid { grid-template-columns: 1fr; }
+  .toggle-btn { font-size: 12px; padding: 8px; }
+  .strategy-grid { grid-template-columns: 1fr; }
+  .futures-chip { font-size: 12px; padding: 5px 8px; }
+  .futures-chip .chip-arrow { display: none; }
+  .futures-panel { padding: 12px; }
+  .refresh-bar { gap: 8px; }
+  .refresh-btn { font-size: 12px; padding: 6px 12px; }
+  .snapshot-badge { display: none; }
+  .ticker-item { min-width: 80px; padding: 4px 10px; }
+  .news-flash-list { max-height: 240px; }
+  .news-item { padding: 6px 10px; }
+  .news-item .news-time { font-size: 10px; min-width: 44px; }
+  .news-item .news-title { font-size: 12px; }
+  .news-item .news-digest { font-size: 10px; }
+  .news-flash-header .meta .refresh-news-btn { font-size: 10px; padding: 1px 6px; }
+}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+</style>
+<script src="https://beacon.cdn.qq.com/sdk/4.5.9/beacon_web.min.js"></script>
+<script>
+(function(){
+  try{
+    var beacon=new BeaconAction({
+      appkey:'0WEB06U85YBSLJNL',
+      versionCode:'1.0.0',
+      channelID:'share',
+      delay:1000,
+      sessionDuration:30*60*1000,
+      isOversea:false,
+      needReportRqdEvent:false
+    });
+    beacon.onDirectUserAction('preview_page_view',{
+      'url':location.href,
+      'referrer':document.referrer,
+      'title':document.title,
+      'sandbox_id':'bf14429bcd4a4febac2aa9dbf86395a7'
+    });
+  }catch(e){}
+})();
+</script></head>
+<body class="mode-personal">
+
+<!-- Header -->
+<div class="header">
+  <div class="container">
+    <div class="header-top">
+      <div>
+        <div class="header-title">
+          <span style="font-size:28px">📊</span>
+          <span>每日期货读盘</span>
+        </div>
+        <div class="header-date">
+          <span class="live-dot"></span>
+          <span>2026年7月28日 星期二</span>
+          <span style="color:var(--text-muted)">|</span>
+          <span id="updateTime">数据更新中...</span>
+        </div>
+      </div>
+    </div>
+    <div class="toggle-bar">
+      <button class="toggle-btn active" onclick="switchMode('personal')">
+        👤 个人版
+        <span class="badge">赚差价</span>
+        <span class="sub">交易机会 · 入场出场 · 涨跌归因 · 盘中价位</span>
+      </button>
+      <button class="toggle-btn" onclick="switchMode('institutional')">
+        🏢 机构版
+        <span class="badge">深度数据</span>
+        <span class="sub">全品种 · 产业链 · 仓单库存 · 交易所公告</span>
+      </button>
+    </div>
+
+    <!-- Refresh bar -->
+    <div class="refresh-bar">
+      <button class="refresh-btn" id="refreshBtn" onclick="refreshLivePrices(); refreshNews();">
+        <span class="refresh-icon">🔄</span>
+        <span>刷新实时数据</span>
+      </button>
+      <label class="auto-toggle">
+        <input type="checkbox" id="autoRefresh" onchange="toggleAutoRefresh()">
+        <span class="switch"></span>
+        <span>自动刷新(价格10s·快讯60s)</span>
+      </label>
+      <span class="last-refresh" id="lastRefreshTime">尚未获取实时数据</span>
+      <span class="market-status" id="marketStatus">检测中</span>
+      <span class="snapshot-badge">报告价格=早间快照 · 点刷新后全页面价格实时更新</span>
+    </div>
+    <div class="market-mode-banner closed" id="marketModeBanner">
+      <span class="icon">⏸️</span>
+      <span id="marketModeText">休市时段，显示收盘价（下一交易日开盘将自动切换为实时价）</span>
+    </div>
+    <div class="market-closed-banner" id="marketClosedBanner">
+      <span class="icon">⏸</span>
+      <span>当前处于休市时段，实时价格显示为最终收盘价格</span>
+      <span class="sub">· 财经快讯与重大事件不受休市影响，可正常刷新</span>
+    </div>
+
+    <!-- Live ticker -->
+    <div class="live-ticker-wrap">
+      <div class="live-ticker-header">
+        <span><span class="dot-live" id="tickerDot"></span>实时价格滚动条（点击品种名查看走势 ↗）</span>
+        <span><span id="tickerClosedBadge" class="market-status closed" style="display:none;margin-right:8px;">休市·收盘价</span><span id="tickerCount">休市收盘价 · 34 个品种</span></span>
+      </div>
+      <div class="live-ticker" id="liveTicker">
+        <div class="ticker-item" id="tick-cu2609"><a href="https://quote.eastmoney.com/qihuo/cu2609.html" target="_blank"><div class="ticker-name">沪铜</div><div class="ticker-code">CU2609</div><div class="ticker-price down">104,810</div><div class="ticker-chg down">-0.13%</div></a></div>
+<div class="ticker-item" id="tick-al2609"><a href="https://quote.eastmoney.com/qihuo/al2609.html" target="_blank"><div class="ticker-name">沪铝</div><div class="ticker-code">AL2609</div><div class="ticker-price up">23,220</div><div class="ticker-chg up">+0.19%</div></a></div>
+<div class="ticker-item" id="tick-au2610"><a href="https://quote.eastmoney.com/qihuo/au2610.html" target="_blank"><div class="ticker-name">沪金</div><div class="ticker-code">AU2610</div><div class="ticker-price down">885.02</div><div class="ticker-chg down">-0.87%</div></a></div>
+<div class="ticker-item" id="tick-ag2610"><a href="https://quote.eastmoney.com/qihuo/ag2610.html" target="_blank"><div class="ticker-name">沪银</div><div class="ticker-code">AG2610</div><div class="ticker-price down">14,087</div><div class="ticker-chg down">-2.35%</div></a></div>
+<div class="ticker-item" id="tick-ni2609"><a href="https://quote.eastmoney.com/qihuo/ni2609.html" target="_blank"><div class="ticker-name">沪镍</div><div class="ticker-code">NI2609</div><div class="ticker-price down">131,000</div><div class="ticker-chg down">-1.36%</div></a></div>
+<div class="ticker-item" id="tick-pb2609"><a href="https://quote.eastmoney.com/qihuo/pb2609.html" target="_blank"><div class="ticker-name">沪铅</div><div class="ticker-code">PB2609</div><div class="ticker-price flat">15,625</div><div class="ticker-chg flat">0.00%</div></a></div>
+<div class="ticker-item" id="tick-zn2609"><a href="https://quote.eastmoney.com/qihuo/zn2609.html" target="_blank"><div class="ticker-name">沪锌</div><div class="ticker-code">ZN2609</div><div class="ticker-price down">24,775</div><div class="ticker-chg down">-0.32%</div></a></div>
+<div class="ticker-item" id="tick-sn2609"><a href="https://quote.eastmoney.com/qihuo/sn2609.html" target="_blank"><div class="ticker-name">沪锡</div><div class="ticker-code">SN2609</div><div class="ticker-price down">411,590</div><div class="ticker-chg down">-1.51%</div></a></div>
+<div class="ticker-item" id="tick-rb2610"><a href="https://quote.eastmoney.com/qihuo/rb2610.html" target="_blank"><div class="ticker-name">螺纹钢</div><div class="ticker-code">RB2610</div><div class="ticker-price down">3,059</div><div class="ticker-chg down">-0.68%</div></a></div>
+<div class="ticker-item" id="tick-hc2610"><a href="https://quote.eastmoney.com/qihuo/hc2610.html" target="_blank"><div class="ticker-name">热轧卷板</div><div class="ticker-code">HC2610</div><div class="ticker-price down">3,280</div><div class="ticker-chg down">-0.46%</div></a></div>
+<div class="ticker-item" id="tick-ss2609"><a href="https://quote.eastmoney.com/qihuo/ss2609.html" target="_blank"><div class="ticker-name">不锈钢</div><div class="ticker-code">SS2609</div><div class="ticker-price down">14,510</div><div class="ticker-chg down">-1.39%</div></a></div>
+<div class="ticker-item" id="tick-ao2609"><a href="https://quote.eastmoney.com/qihuo/ao2609.html" target="_blank"><div class="ticker-name">氧化铝</div><div class="ticker-code">AO2609</div><div class="ticker-price down">2,683</div><div class="ticker-chg down">-0.81%</div></a></div>
+<div class="ticker-item" id="tick-fu2609"><a href="https://quote.eastmoney.com/qihuo/fu2609.html" target="_blank"><div class="ticker-name">燃料油</div><div class="ticker-code">FU2609</div><div class="ticker-price down">3,503</div><div class="ticker-chg down">-6.06%</div></a></div>
+<div class="ticker-item" id="tick-bu2609"><a href="https://quote.eastmoney.com/qihuo/bu2609.html" target="_blank"><div class="ticker-name">沥青</div><div class="ticker-code">BU2609</div><div class="ticker-price down">4,086</div><div class="ticker-chg down">-2.06%</div></a></div>
+<div class="ticker-item" id="tick-br2609"><a href="https://quote.eastmoney.com/qihuo/br2609.html" target="_blank"><div class="ticker-name">合成橡胶</div><div class="ticker-code">BR2609</div><div class="ticker-price down">12,855</div><div class="ticker-chg down">-3.82%</div></a></div>
+<div class="ticker-item" id="tick-i2609"><a href="https://quote.eastmoney.com/qihuo/i2609.html" target="_blank"><div class="ticker-name">铁矿石</div><div class="ticker-code">I2609</div><div class="ticker-price down">740.0</div><div class="ticker-chg down">-0.34%</div></a></div>
+<div class="ticker-item" id="tick-j2609"><a href="https://quote.eastmoney.com/qihuo/j2609.html" target="_blank"><div class="ticker-name">焦炭</div><div class="ticker-code">J2609</div><div class="ticker-price down">1,825</div><div class="ticker-chg down">-1.30%</div></a></div>
+<div class="ticker-item" id="tick-jm2609"><a href="https://quote.eastmoney.com/qihuo/jm2609.html" target="_blank"><div class="ticker-name">焦煤</div><div class="ticker-code">JM2609</div><div class="ticker-price down">1242.0</div><div class="ticker-chg down">-2.40%</div></a></div>
+<div class="ticker-item" id="tick-m2609"><a href="https://quote.eastmoney.com/qihuo/m2609.html" target="_blank"><div class="ticker-name">豆粕</div><div class="ticker-code">M2609</div><div class="ticker-price down">3,100</div><div class="ticker-chg down">-2.39%</div></a></div>
+<div class="ticker-item" id="tick-y2609"><a href="https://quote.eastmoney.com/qihuo/y2609.html" target="_blank"><div class="ticker-name">豆油</div><div class="ticker-code">Y2609</div><div class="ticker-price down">8,418</div><div class="ticker-chg down">-1.22%</div></a></div>
+<div class="ticker-item" id="tick-p2609"><a href="https://quote.eastmoney.com/qihuo/p2609.html" target="_blank"><div class="ticker-name">棕榈油</div><div class="ticker-code">P2609</div><div class="ticker-price down">9,311</div><div class="ticker-chg down">-1.23%</div></a></div>
+<div class="ticker-item" id="tick-lh2609"><a href="https://quote.eastmoney.com/qihuo/lh2609.html" target="_blank"><div class="ticker-name">生猪</div><div class="ticker-code">LH2609</div><div class="ticker-price down">10,960</div><div class="ticker-chg down">-1.70%</div></a></div>
+<div class="ticker-item" id="tick-jd2609"><a href="https://quote.eastmoney.com/qihuo/jd2609.html" target="_blank"><div class="ticker-name">鸡蛋</div><div class="ticker-code">JD2609</div><div class="ticker-price up">4,133</div><div class="ticker-chg up">+1.55%</div></a></div>
+<div class="ticker-item" id="tick-eb2609"><a href="https://quote.eastmoney.com/qihuo/eb2609.html" target="_blank"><div class="ticker-name">苯乙烯</div><div class="ticker-code">EB2609</div><div class="ticker-price down">8,330</div><div class="ticker-chg down">-2.72%</div></a></div>
+<div class="ticker-item" id="tick-eg2609"><a href="https://quote.eastmoney.com/qihuo/eg2609.html" target="_blank"><div class="ticker-name">乙二醇</div><div class="ticker-code">EG2609</div><div class="ticker-price down">4,815</div><div class="ticker-chg down">-0.80%</div></a></div>
+<div class="ticker-item" id="tick-TA2609"><a href="https://quote.eastmoney.com/qihuo/TA2609.html" target="_blank"><div class="ticker-name">PTA</div><div class="ticker-code">TA2609</div><div class="ticker-price down">5,626</div><div class="ticker-chg down">-1.40%</div></a></div>
+<div class="ticker-item" id="tick-MA2609"><a href="https://quote.eastmoney.com/qihuo/MA2609.html" target="_blank"><div class="ticker-name">甲醇</div><div class="ticker-code">MA2609</div><div class="ticker-price down">2,600</div><div class="ticker-chg down">-2.40%</div></a></div>
+<div class="ticker-item" id="tick-sa2609"><a href="https://quote.eastmoney.com/qihuo/sa2609.html" target="_blank"><div class="ticker-name">纯碱</div><div class="ticker-code">SA2609</div><div class="ticker-price down">972</div><div class="ticker-chg down">-2.80%</div></a></div>
+<div class="ticker-item" id="tick-oi609"><a href="https://quote.eastmoney.com/qihuo/oi609.html" target="_blank"><div class="ticker-name">菜油</div><div class="ticker-code">OI2609</div><div class="ticker-price down">9,890</div><div class="ticker-chg down">-1.91%</div></a></div>
+<div class="ticker-item" id="tick-ur609"><a href="https://quote.eastmoney.com/qihuo/ur609.html" target="_blank"><div class="ticker-name">尿素</div><div class="ticker-code">UR2609</div><div class="ticker-price down">1,740</div><div class="ticker-chg down">-0.51%</div></a></div>
+<div class="ticker-item" id="tick-fg609"><a href="https://quote.eastmoney.com/qihuo/fg609.html" target="_blank"><div class="ticker-name">玻璃</div><div class="ticker-code">FG2609</div><div class="ticker-price down">888</div><div class="ticker-chg down">-1.99%</div></a></div>
+<div class="ticker-item" id="tick-sc2609"><a href="https://quote.eastmoney.com/qihuo/sc2609.html" target="_blank"><div class="ticker-name">原油</div><div class="ticker-code">SC2609</div><div class="ticker-price down">532.4</div><div class="ticker-chg down">-5.77%</div></a></div>
+<div class="ticker-item" id="tick-lu2609"><a href="https://quote.eastmoney.com/qihuo/lu2609.html" target="_blank"><div class="ticker-name">低硫燃油</div><div class="ticker-code">LU2609</div><div class="ticker-price down">4,613</div><div class="ticker-chg down">-2.62%</div></a></div>
+<div class="ticker-item" id="tick-bc2608"><a href="https://quote.eastmoney.com/qihuo/bc2608.html" target="_blank"><div class="ticker-name">国际铜</div><div class="ticker-code">BC2608</div><div class="ticker-price flat">93,320</div><div class="ticker-chg flat">0.00%</div></a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container" style="padding-top: 20px;">
+
+<!-- ===== Real-time News Flash (shared between both views) ===== -->
+<div class="news-flash-wrap">
+  <div class="news-flash-header">
+    <span class="title">
+      <span class="dot-news" id="newsDot"></span>
+      实时财经快讯 · 期货关联
+    </span>
+    <span class="meta">
+      <span id="newsCount">12 条快讯</span>
+      <label class="auto-toggle" id="newsAutoToggle" style="font-size:11px;">
+        <input type="checkbox" id="newsAutoRefresh" checked onchange="toggleNewsAutoRefresh()">
+        <span class="switch sm"></span>
+        <span>快讯自动刷新</span>
+      </label>
+      <button class="refresh-news-btn" id="refreshNewsBtn" onclick="refreshNews()">刷新快讯</button>
+    </span>
+  </div>
+  <div class="news-flash-list" id="newsFlashList">
+  <p style="color:var(--text-muted);padding:20px;text-align:center">⏳ 正在加载最新快讯...</p>
+</div>
+
+<div class="personal-view">
+
+  <!-- Quick Nav -->
+  <div class="quick-nav">
+    <a href="#p-temp">市场温度</a>
+    <a href="#p-trade">交易机会榜</a>
+    <a href="#p-attr">涨跌归因</a>
+    <a href="#p-levels">关键价位</a>
+    <a href="#p-focus">今日关注</a>
+    <a href="#p-life">生活影响</a>
+    <a href="#p-gold">买金指南</a>
+    <a href="#p-risk">风险提示</a>
+  </div>
+
+  <!-- ===== 1. Temperature Meter ===== -->
+  <div id="p-temp" class="section">
+    <h3 class="section-title">🌡️ 今日市场温度</h3>
+    <div class="temp-meter" id="personalTempMeter">
+      <p style="color:var(--text-muted);padding:20px;text-align:center">⏳ 加载实时数据中...</p>
+    </div>
+  </div>
+
+  <!-- ===== 2. Trading Opportunity Ranking ===== -->
+  <div id="p-trade" class="section">
+    <h3 class="section-title">💰 今日交易机会榜（赚差价专用）</h3>
+    <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px">
+      按盈亏比从高到低排序，含入场价、止损、目标、保证金估算。<strong style="color:var(--red)">期货有杠杆，亏损可能超本金</strong>。点击品种名看实时走势。
+    </p>
+    <div id="personalTradeTable" class="table-wrap trade-table">
+      <p style="color:var(--text-muted);padding:20px;text-align:center">⏳ 加载中...</p>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-top:6px" id="personalTradeDisclaimer">保证金按交易所标准估算，期货公司通常加收3-5%。实际以开户公司为准。</p>
+  </div>
+
+  <!-- ===== 3. Attribution Quick Reference ===== -->
+  <div id="p-attr" class="section">
+    <h3 class="section-title">📊 今日涨跌归因速查（写资讯直接抄）</h3>
+    <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px">
+      每个品种一句话说清楚今天为什么涨/跌，品种名可点击查看走势。归因数据基于当日实时新闻自动匹配。
+    </p>
+    <div id="personalAttrTable" class="table-wrap attr-table">
+      <p style="color:var(--text-muted);padding:20px;text-align:center">⏳ 加载中...</p>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-top:6px" id="personalAttrSources"></p>
+  </div>
+
+  <!-- ===== 4. Key Price Levels ===== -->
+  <div id="p-levels" class="section">
+    <h3 class="section-title">⚡ 盘中关键价位（到价再看）</h3>
+    <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px">
+      设置价格提醒，到关键位再决定操作。突破/跌破看下方预判。数据实时更新。
+    </p>
+    <div id="personalLevelsGrid" class="focus-grid" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr))">
+      <p style="color:var(--text-muted);padding:20px;text-align:center">⏳ 加载中...</p>
+    </div>
+  </div>
+
+  <!-- ===== 5. Focus Cards ===== -->
+  <div id="p-focus" class="section">
+    <h3 class="section-title">🎯 今日重点关注（点击品种名看走势）</h3>
+    <div id="personalFocusGrid" class="focus-grid">
+      <p style="color:var(--text-muted);padding:20px;text-align:center">⏳ 加载中...</p>
+    </div>
+  </div>
+
+  <!-- ===== 6. Life Impact ===== -->
+  <div id="p-life" class="section">
+    <h3 class="section-title">🏠 对生活有什么影响？</h3>
+    <div id="personalLifeCards">
+      <p style="color:var(--text-muted);padding:20px;text-align:center">⏳ 加载中...</p>
+    </div>
+  </div>
+
+  <!-- ===== 7. Gold Buying Guide ===== -->
+  <div id="p-gold" class="section">
+    <h3 class="section-title">🥇 黄金购买指南：哪里买最划算？
+      <span id="goldGuideStatus" style="font-size:12px;color:var(--text-muted);font-weight:400;margin-left:8px;">加载中...</span>
+    </h3>
+    <div id="personalGoldGuide">
+      <p style="color:var(--text-muted);padding:20px;text-align:center">⏳ 加载中...</p>
+    </div>
+  </div>
+
+  <!-- ===== 8. Risk Alert ===== -->
+  <div id="p-risk" class="section">
+    <h3 class="section-title">⚠️ 本周风险提示</h3>
+    <div id="personalRiskCards">
+      <p style="color:var(--text-muted);padding:20px;text-align:center">⏳ 加载中...</p>
+    </div>
+  </div>
+
+</div><!-- end personal-view -->
+
+
+<!-- ============================================================ -->
+<!-- ===========       机构版 INSTITUTIONAL VIEW       ========== -->
+<!-- ============================================================ -->
+<div class="institutional-view">
+
+  <!-- Quick Nav -->
+  <div class="quick-nav">
+    <a href="#i-overview">市场概览</a>
+    <a href="#i-timeline">资讯时间线</a>
+    <a href="#i-energy">能化</a>
+    <a href="#i-metals">有色</a>
+    <a href="#i-black">黑色</a>
+    <a href="#i-agri">农产品</a>
+    <a href="#i-precious">贵金属</a>
+    <a href="#i-gold">黄金专题</a>
+    <a href="#i-strategy">策略矩阵</a>
+    <a href="#i-spread">套利机会</a>
+    <a href="#i-position">资金持仓</a>
+    <a href="#i-inventory">仓单库存</a>
+    <a href="#i-announce">交易所公告</a>
+    <a href="#i-macro">宏观日历</a>
+    <a href="#i-intl">外盘联动</a>
+  </div>
+
+  <!-- ===== Market Overview ===== -->
+  <div id="i-overview" class="section">
+    <h3 class="section-title">📈 市场概览</h3>
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="label">原油 SC主力</div>
+        <div class="value down" data-live-price="SC2609">539.6</div>
+        <div class="change down"><span data-live-chgpct="SC2609">-4.50%</span> · 元/桶</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">沪金 AU主力</div>
+        <div class="value down" data-live-price="AU2610">891.12</div>
+        <div class="change down"><span data-live-chgpct="AU2610">-0.18%</span> · 元/克</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">沪铜 CU主力</div>
+        <div class="value up" data-live-price="CU2609">105,280</div>
+        <div class="change up"><span data-live-chgpct="CU2609">+0.31%</span> · 元/吨</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">螺纹钢 RB主力</div>
+        <div class="value up" data-live-price="RB2610">3,078</div>
+        <div class="change up"><span data-live-chgpct="RB2610">+0.16%</span> · 元/吨</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">COMEX黄金</div>
+        <div class="value up">4,078.6</div>
+        <div class="change up">+0.19% · 美元/盎司</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">布伦特原油</div>
+        <div class="value down">88.36</div>
+        <div class="change down">-8.70% · 美元/桶</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">美元指数</div>
+        <div class="value up">101.53</div>
+        <div class="change up">+0.06%</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">在岸人民币</div>
+        <div class="value up">6.7674</div>
+        <div class="change up">+70bp · 升值</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== News Timeline ===== -->
+  <div id="i-timeline" class="section">
+    <h3 class="section-title">📰 今日资讯快讯时间线</h3>
+    <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px">按时间倒序 · 标注影响级别（红色=高影响 橙色=中等影响）· 点击来源查看原文</p>
+    <div class="timeline">
+      <p style="color:var(--text-muted);padding:20px;text-align:center">⏳ 正在加载当日快讯...</p>
+    </div>
+  </div>
+
+<div class="section" id="i-events">
+    <h3 class="section-title">🔥 核心事件与影响传导</h3>
+    <div class="event-grid" id="coreEventsGrid">
+      <p style="color:var(--text-muted);padding:20px;text-align:center">⏳ 正在从实时新闻中提取核心事件...</p>
+    </div>
+  </div>
+  </div>
+
+  <!-- ===== Energy/Chemical Full Table ===== -->
+  <div id="i-energy" class="section">
+    <h3 class="section-title">🛢️ 能化板块 <span class="tag tag-energy">重挫</span></h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>品种</th><th>合约</th><th>最新价</th><th>涨跌</th><th>涨跌幅</th><th>开盘价</th><th>最高价</th><th>最低价</th><th>均价/结算</th><th>现货价</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/sc2609.html" target="_blank">原油</a></td><td class="contract-code">SC2609</td><td class="down" data-live-price="SC2609">539.6</td><td class="down" data-live-chgamt="SC2609">-25.4</td><td class="down" data-live-chgpct="SC2609">-4.50%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/fu2609.html" target="_blank">燃料油</a></td><td class="contract-code">FU2609</td><td class="down">—</td><td class="down">—</td><td class="down">&lt;-8%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>6,250</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/lu2609.html" target="_blank">低硫燃油</a></td><td class="contract-code">LU2609</td><td class="down">—</td><td class="down">—</td><td class="down">&lt;-6%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/bz2609.html" target="_blank">纯苯</a></td><td class="contract-code">BZ2609</td><td class="down">—</td><td class="down">—</td><td class="down">&lt;-7%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/eb2609.html" target="_blank">苯乙烯</a></td><td class="contract-code">EB2609</td><td class="down">—</td><td class="down">—</td><td class="down">&lt;-6%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/br2609.html" target="_blank">合成橡胶</a></td><td class="contract-code">BR2609</td><td class="down">—</td><td class="down">—</td><td class="down">&lt;-6%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>13,770</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/TA2609.html" target="_blank">PTA</a></td><td class="contract-code">TA2609</td><td class="down">—</td><td class="down">—</td><td class="down">大幅下跌</td><td>—</td><td>—</td><td>—</td><td>—</td><td>5,997</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/MA2609.html" target="_blank">甲醇</a></td><td class="contract-code">MA2609</td><td class="down">—</td><td class="down">—</td><td class="down">大幅下跌</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/bu2609.html" target="_blank">沥青</a></td><td class="contract-code">BU2609</td><td class="down">—</td><td class="down">—</td><td class="down">下跌</td><td>—</td><td>—</td><td>—</td><td>—</td><td>4,373</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="analysis-box">
+      <h4>📋 产业链深度分析</h4>
+      <p><strong>核心逻辑：</strong>本轮暴跌是地缘溢价回吐而非基本面恶化。后续美伊走向谈判桌还是重新开战难以定论，油价高波动特征显著。</p>
+      <ul>
+        <li><strong>供应端：</strong>霍尔木兹海峡和曼德海峡船舶通过量维持低位。6月全球炼厂加工量环比+150万桶/日但同比-600万桶/日。海湾地区主要出口型炼油厂装载尚未恢复。乌克兰袭击俄炼厂及出口基建频率上升。</li>
+        <li><strong>需求端：</strong>EIA/IEA/OPEC对今年全球石油需求增速预测分别为-122万/-100万/+80万桶/日。高油价对需求的抑制不容忽视。</li>
+        <li><strong>钻探：</strong>贝克休斯数据显示截至7月24日当周美国在线钻探油井450座（-2座周环比，+35座同比）。</li>
+        <li><strong>PTA产业链：</strong>原油跌→PX成本下移→PTA加工费或有修复空间。关注聚酯开工率及终端织机订单情况。</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== Base Metals Full Table ===== -->
+  <div id="i-metals" class="section">
+    <h3 class="section-title">🔩 有色金属 <span class="tag tag-metal">多数上涨</span></h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>品种</th><th>合约</th><th>最新价</th><th>涨跌</th><th>涨跌幅</th><th>开盘价</th><th>最高价</th><th>最低价</th><th>均价/结算</th><th>现货价</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/cu2609.html" target="_blank">沪铜</a></td><td class="contract-code">CU2609</td><td class="up" data-live-price="CU2609">105,280</td><td class="up" data-live-chgamt="CU2609">+330</td><td class="up" data-live-chgpct="CU2609">+0.31%</td><td>105,500</td><td>105,650</td><td>105,050</td><td>105,408</td><td>—</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/al2609.html" target="_blank">沪铝</a></td><td class="contract-code">AL2609</td><td class="up" data-live-price="AL2609">23,275</td><td class="up" data-live-chgamt="AL2609">+100</td><td class="up" data-live-chgpct="AL2609">+0.43%</td><td>23,255</td><td>23,320</td><td>23,230</td><td>23,277</td><td>—</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/bc2608.html" target="_blank">国际铜</a></td><td class="contract-code">BC2608</td><td class="up" data-live-price="BC2608">93,530</td><td class="up" data-live-chgamt="BC2608">+210</td><td class="up" data-live-chgpct="BC2608">+0.23%</td><td>93,720</td><td>94,010</td><td>93,500</td><td>93,798</td><td>—</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/pb2609.html" target="_blank">沪铅</a></td><td class="contract-code">PB2609</td><td class="up">—</td><td class="up">—</td><td class="up">+0.51%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>15,519</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/zn2609.html" target="_blank">沪锌</a></td><td class="contract-code">ZN2609</td><td class="up">—</td><td class="up">—</td><td class="up">+0.04%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>24,763</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/sn2609.html" target="_blank">沪锡</a></td><td class="contract-code">SN2609</td><td class="up">—</td><td class="up">—</td><td class="up">+0.24%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>420,075</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/ni2609.html" target="_blank">沪镍</a></td><td class="contract-code">NI2609</td><td class="down">—</td><td class="down">—</td><td class="down">-0.44%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>133,050</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/ao2609.html" target="_blank">氧化铝</a></td><td class="contract-code">AO2609</td><td class="down">—</td><td class="down">—</td><td class="down">-0.70%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/ss2609.html" target="_blank">不锈钢</a></td><td class="contract-code">SS2609</td><td class="down">—</td><td class="down">—</td><td class="down">-0.82%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>14,900</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="analysis-box">
+      <h4>📋 产业链供需分析</h4>
+      <ul>
+        <li><strong>铜矿端：</strong>冶炼加工费持续向下，智利天气影响铜矿供给扰动增强。Antofagasta铜矿复产，五矿资源二季度产量同比持平。IEA预警2035年铜供应缺口达25%。</li>
+        <li><strong>铜库存：</strong>国内铜社会库存略有抬升，但现货升水维持较高水平，全球显性库存持续下降。CFTC铜净多头增加。</li>
+        <li><strong>铝供应：</strong>挪威海德鲁警告全球铝市场供应缺口或加深。社会库存持续去化。</li>
+        <li><strong>铝需求：</strong>淡季效应深化，下游加工龙头企业开工率环比-0.2pct至61.1%。出口随内外价差收窄，后续出口规模或回落。</li>
+        <li><strong>氧化铝：</strong>扰动事件增加，下方有成本支撑，价格继续震荡运行。</li>
+        <li><strong>企业盈利：</strong>铜陵有色预计半年度净利大增。有色行业利润+99.4%。</li>
+      </ul>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:8px">来源：<a href="javascript:void(0)" style="pointer-events:none;opacity:0.6" target="_blank">同花顺交易早参</a> · <a href="javascript:void(0)" style="pointer-events:none;opacity:0.6" target="_blank">财达早评</a></p>
+    </div>
+  </div>
+
+  <!-- ===== Black Series ===== -->
+  <div id="i-black" class="section">
+    <h3 class="section-title">⚙️ 黑色系 <span class="tag tag-black">分化</span></h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>品种</th><th>合约</th><th>最新价</th><th>涨跌</th><th>涨跌幅</th><th>开盘价</th><th>最高价</th><th>最低价</th><th>均价/结算</th><th>现货价</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/rb2610.html" target="_blank">螺纹钢</a></td><td class="contract-code">RB2610</td><td class="up" data-live-price="RB2610">3,078.0</td><td class="up" data-live-chgamt="RB2610">+5.0</td><td class="up" data-live-chgpct="RB2610">+0.16%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>3,073</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/i2609.html" target="_blank">铁矿石</a></td><td class="contract-code">I2609</td><td class="down" data-live-price="I2609">741.0</td><td class="down" data-live-chgamt="I2609">-2.0</td><td class="down" data-live-chgpct="I2609">-0.27%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>709</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/jm2609.html" target="_blank">焦煤</a></td><td class="contract-code">JM2609</td><td class="down" data-live-price="JM2609">1,270.5</td><td class="down" data-live-chgamt="JM2609">-13.5</td><td class="down" data-live-chgpct="JM2609">-1.05%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/j2609.html" target="_blank">焦炭</a></td><td class="contract-code">J2609</td><td class="down">—</td><td class="down">—</td><td class="down">-0.65%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>1,957</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/hc2610.html" target="_blank">热轧卷板</a></td><td class="contract-code">HC2610</td><td class="down">—</td><td class="down">—</td><td class="down">-0.33%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>3,314</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="analysis-box">
+      <h4>📋 黑色产业链研判</h4>
+      <ul>
+        <li><strong>螺纹：</strong>产量小幅增加，表需小幅减少，库存开始小幅累库。盘面能否企稳反弹取决于成本端支撑及需求边际增量。</li>
+        <li><strong>铁矿石：</strong>进口矿发运量小幅下降，预计下周到港量继续小幅回落。日均铁水量继续小幅减少，钢厂开始小幅补库，港口库存延续小幅去库。高炉利润挤压下铁水反弹修复力度有限。</li>
+        <li><strong>焦煤焦炭：</strong>焦煤跌幅较大，成本支撑下移对螺纹形成拖累。关注焦化厂开工率及下游钢厂补库节奏。</li>
+      </ul>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:8px">来源：<a href="javascript:void(0)" style="pointer-events:none;opacity:0.6" target="_blank">财达早评 7.28</a></p>
+    </div>
+  </div>
+
+  <!-- ===== Agricultural ===== -->
+  <div id="i-agri" class="section">
+    <h3 class="section-title">🌾 农产品 <span class="tag tag-agri">跟随原油走低</span></h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>品种</th><th>合约</th><th>最新价</th><th>涨跌</th><th>涨跌幅</th><th>开盘价</th><th>最高价</th><th>最低价</th><th>昨结</th><th>现货价</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/y2609.html" target="_blank">豆油</a></td><td class="contract-code">Y2609</td><td class="down" data-live-price="Y2609">8,442</td><td class="down" data-live-chgamt="Y2609">-78</td><td class="down" data-live-chgpct="Y2609">-0.92%</td><td>8,500</td><td>8,504</td><td>8,440</td><td>8,522</td><td>—</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/p2609.html" target="_blank">棕榈油</a></td><td class="contract-code">P2609</td><td class="down">—</td><td class="down">—</td><td class="down">-1.66%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/oi2609.html" target="_blank">菜油</a></td><td class="contract-code">OI2609</td><td class="down">—</td><td class="down">—</td><td class="down">-1.41%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/m2609.html" target="_blank">豆粕</a></td><td class="contract-code">M2609</td><td class="down" data-live-price="M2609">3,129</td><td class="down">—</td><td class="down">下跌</td><td>—</td><td>—</td><td>—</td><td>—</td><td>3,122</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/lh2609.html" target="_blank">生猪</a></td><td class="contract-code">LH2609</td><td class="up" data-live-price="LH2609">11,175</td><td class="up">—</td><td class="up">+0.99%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>10.32元/kg</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/jd2609.html" target="_blank">鸡蛋</a></td><td class="contract-code">JD2609</td><td class="up" data-live-price="JD2609">4,085</td><td class="up">—</td><td class="up">+1.57%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>4.57元/斤</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="analysis-box">
+      <h4>📋 农产品产业链分析</h4>
+      <ul>
+        <li><strong>蛋白粕：</strong>豆粕仍在累库趋势中，盘面逻辑聚焦原油走强及进口成本。接下来两周美豆产区气温回落、降雨恢复，天气升水回落。</li>
+        <li><strong>油脂：</strong>CBOT大豆跌3%，美豆粕/美豆油跌超3%。BMD棕榈油跌超1%，但马棕油7月1-25日出口环比+8.1%~15.9%。加菜籽跌超4%。国内外油脂食用需求淡季。</li>
+        <li><strong>生猪：</strong>高温+院校放假不利于消费。后期天气转凉需求恢复+产能下降供应改善，猪价有望反弹。但能繁母猪存栏仍未降至正常保有量以下，弱反弹概率大。</li>
+        <li><strong>玉米：</strong>7-8月替代品及天气多空交织，厄尔尼诺干旱对美盘谷物有支撑，国内影响有限。</li>
+      </ul>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:8px">来源：<a href="https://finance.sina.com.cn/money/future/fmnews/2026-07-28/doc-inikimep0386307.shtml" target="_blank">光大期货</a> · <a href="https://ncp.mysteel.com/a/26072808/89CD91FE924DC8AD.html" target="_blank">Mysteel</a></p>
+    </div>
+  </div>
+
+  <!-- ===== Precious Metals ===== -->
+  <div id="i-precious" class="section">
+    <h3 class="section-title">✨ 贵金属 <span class="tag tag-gold">震荡</span></h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>品种</th><th>合约</th><th>最新价</th><th>涨跌</th><th>涨跌幅</th><th>日盘收盘</th><th>日盘涨跌幅</th><th>单位</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/au2610.html" target="_blank">沪金</a></td><td class="contract-code">AU2610</td><td class="down" data-live-price="AU2610">891.12</td><td class="down" data-live-chgamt="AU2610">-1.60</td><td class="down" data-live-chgpct="AU2610">-0.18%</td><td class="up">895.78</td><td class="up">+1.12%</td><td>元/克</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/ag2610.html" target="_blank">沪银</a></td><td class="contract-code">AG2610</td><td class="down" data-live-price="AG2610">14,322</td><td class="down" data-live-chgamt="AG2610">-104</td><td class="down" data-live-chgpct="AG2610">-0.72%</td><td class="up">14,558</td><td class="up">+3.08%</td><td>元/千克</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/au2610.html" target="_blank">COMEX黄金</a></td><td class="contract-code">GC2610</td><td class="up">4,078.6</td><td class="up">+7.7</td><td class="up">+0.19%</td><td>—</td><td>—</td><td>美元/盎司</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/ag2610.html" target="_blank">COMEX白银</a></td><td class="contract-code">SI2609</td><td class="down">58.70</td><td class="down">-0.21</td><td class="down">-0.36%</td><td>—</td><td>—</td><td>美元/盎司</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/au2610.html" target="_blank">现货黄金</a></td><td class="contract-code">XAU</td><td class="down">4,075.69</td><td class="down">-16.08</td><td class="down">-0.39%</td><td>—</td><td>—</td><td>美元/盎司</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/au2610.html" target="_blank">NYMEX铂金</a></td><td class="contract-code">PL</td><td class="up">1,631.1</td><td class="up">+26.9</td><td class="up">+1.68%</td><td>—</td><td>—</td><td>美元/盎司</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/au2610.html" target="_blank">NYMEX钯金</a></td><td class="contract-code">PA</td><td class="up">1,290.0</td><td class="up">+36.3</td><td class="up">+2.90%</td><td>—</td><td>—</td><td>美元/盎司</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="analysis-box">
+      <h4>📋 贵金属研判</h4>
+      <p><strong>南华期货核心观点：</strong>贵金属在深度回调后已部分定价美联储鹰派预期，估值端进一步下修空间有限。当前加息预期交易已较为拥挤——市场已完全定价美联储年内加息一次，于明年4月大概率再加息一次。基准情景下美联储年内降息概率偏低，制约下半年反弹高度；但2027年Q2美联储仍有望重启降息窗口。</p>
+      <ul>
+        <li><strong>技术面：</strong>沪金主力880-910元/克区间，沪银主力14000-14800元/千克区间</li>
+        <li><strong>ETF持仓：</strong>SPDR黄金持仓1009.298吨（不变）；iShares白银持仓15024.77吨（-19.68吨）</li>
+        <li><strong>资金流向：</strong>AI科技股资金虹吸效应减弱，投资资金出现回流贵金属迹象，亚盘黄金ETF(159934)资金开始增加</li>
+        <li><strong>铂金：</strong>2026年全球供需缺口扩大，需求结构抗风险，反弹弹性较强</li>
+        <li><strong>钯金：</strong>1200美元/盎司已触及矿山AISC全维持成本线，美国向俄罗斯征税预期落空，基本面偏弱</li>
+      </ul>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:8px">来源：<a href="https://www.163.com/dy/article/L2TPKQFT0512B07B.html" target="_blank">黄金早参</a> · <a href="javascript:void(0)" style="pointer-events:none;opacity:0.6" target="_blank">国信期货</a> · <a href="javascript:void(0)" style="pointer-events:none;opacity:0.6" target="_blank">同花顺</a></p>
+    </div>
+  </div>
+
+  <!-- ===== Strategy Matrix ===== -->
+  <div id="i-strategy" class="section">
+    <h3 class="section-title">🎲 策略矩阵</h3>
+    <div class="strategy-grid">
+
+      <div class="strategy-card">
+        <div class="s-name"><a href="https://quote.eastmoney.com/qihuo/sc2609.html" target="_blank">原油 SC2609 ↗</a></div>
+        <span class="s-dir s-neutral">⏳ 观望</span>
+        <div class="s-row"><span class="s-label">方向</span><span class="s-val">暂时空仓</span></div>
+        <div class="s-row"><span class="s-label">入场区间</span><span class="s-val">520-545（待企稳）</span></div>
+        <div class="s-row"><span class="s-label">止损</span><span class="s-val">510</span></div>
+        <div class="s-row"><span class="s-label">目标</span><span class="s-val">待FOMC后定</span></div>
+        <div class="s-row"><span class="s-label">仓位</span><span class="s-val">≤10%</span></div>
+        <div class="s-note">地缘溢价回吐但供应端制约仍在，波动极大。FOMC前不建议建仓。</div>
+      </div>
+
+      <div class="strategy-card">
+        <div class="s-name"><a href="https://quote.eastmoney.com/qihuo/au2610.html" target="_blank">沪金 AU2610 ↗</a></div>
+        <span class="s-dir s-long">📈 偏多</span>
+        <div class="s-row"><span class="s-label">方向</span><span class="s-val">回调做多</span></div>
+        <div class="s-row"><span class="s-label">入场区间</span><span class="s-val">880-885</span></div>
+        <div class="s-row"><span class="s-label">止损</span><span class="s-val">875</span></div>
+        <div class="s-row"><span class="s-label">目标</span><span class="s-val">905-910</span></div>
+        <div class="s-row"><span class="s-label">仓位</span><span class="s-val">15-20%</span></div>
+        <div class="s-note">加息预期交易已较拥挤，若FOMC维持利率不变有望反弹突破。</div>
+      </div>
+
+      <div class="strategy-card">
+        <div class="s-name"><a href="https://quote.eastmoney.com/qihuo/cu2609.html" target="_blank">沪铜 CU2609 ↗</a></div>
+        <span class="s-dir s-long">📈 偏多</span>
+        <div class="s-row"><span class="s-label">方向</span><span class="s-val">区间做多</span></div>
+        <div class="s-row"><span class="s-label">入场区间</span><span class="s-val">103,000-104,000</span></div>
+        <div class="s-row"><span class="s-label">止损</span><span class="s-val">102,500</span></div>
+        <div class="s-row"><span class="s-label">目标</span><span class="s-val">106,000-107,000</span></div>
+        <div class="s-row"><span class="s-label">仓位</span><span class="s-val">15%</span></div>
+        <div class="s-note">矿端紧张+全球库存下降+工业利润支撑。供需偏紧格局未变。</div>
+      </div>
+
+      <div class="strategy-card">
+        <div class="s-name"><a href="https://quote.eastmoney.com/qihuo/al2609.html" target="_blank">沪铝 AL2609 ↗</a></div>
+        <span class="s-dir s-long">📈 偏多</span>
+        <div class="s-row"><span class="s-label">方向</span><span class="s-val">回调做多</span></div>
+        <div class="s-row"><span class="s-label">入场区间</span><span class="s-val">22,800-23,100</span></div>
+        <div class="s-row"><span class="s-label">止损</span><span class="s-val">22,600</span></div>
+        <div class="s-row"><span class="s-label">目标</span><span class="s-val">23,500-23,800</span></div>
+        <div class="s-row"><span class="s-label">仓位</span><span class="s-val">10-15%</span></div>
+        <div class="s-note">供应缺口加深+库存去化。但淡季需求回落限制涨幅。</div>
+      </div>
+
+      <div class="strategy-card">
+        <div class="s-name"><a href="https://quote.eastmoney.com/qihuo/y2609.html" target="_blank">豆油 Y2609 ↗</a></div>
+        <span class="s-dir s-short">📉 偏空</span>
+        <div class="s-row"><span class="s-label">方向</span><span class="s-val">逢高做空</span></div>
+        <div class="s-row"><span class="s-label">入场区间</span><span class="s-val">8,500-8,550</span></div>
+        <div class="s-row"><span class="s-label">止损</span><span class="s-val">8,620</span></div>
+        <div class="s-row"><span class="s-label">目标</span><span class="s-val">8,300-8,350</span></div>
+        <div class="s-row"><span class="s-label">仓位</span><span class="s-val">10%</span></div>
+        <div class="s-note">原油跌+消费淡季+供强需弱。但马棕出口强劲限制跌幅。</div>
+      </div>
+
+      <div class="strategy-card">
+        <div class="s-name"><a href="https://quote.eastmoney.com/qihuo/jm2609.html" target="_blank">焦煤 JM2609 ↗</a></div>
+        <span class="s-dir s-short">📉 偏空</span>
+        <div class="s-row"><span class="s-label">方向</span><span class="s-val">反弹做空</span></div>
+        <div class="s-row"><span class="s-label">入场区间</span><span class="s-val">1,290-1,310</span></div>
+        <div class="s-row"><span class="s-label">止损</span><span class="s-val">1,340</span></div>
+        <div class="s-row"><span class="s-label">目标</span><span class="s-val">1,230-1,250</span></div>
+        <div class="s-row"><span class="s-label">仓位</span><span class="s-val">10%</span></div>
+        <div class="s-note">高炉利润挤压+铁水产量回落。成本支撑下移。</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== Spread / Arbitrage ===== -->
+  <div id="i-spread" class="section">
+    <h3 class="section-title">🔄 跨品种套利与价差结构</h3>
+    <div class="table-wrap spread-table">
+      <table>
+        <thead>
+          <tr><th>套利组合</th><th>当前价差/比值</th><th>逻辑</th><th>方向</th><th>建议</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>金银比 (AU/AG)</td>
+            <td class="spread-val">~62.2</td>
+            <td>历史均值~75，当前偏低</td>
+            <td class="up">扩大多头</td>
+            <td>多金空银，比值回归</td>
+          </tr>
+          <tr>
+            <td>铜铝比 (CU/AL)</td>
+            <td class="spread-val">~4.52</td>
+            <td>铜矿紧张vs铝供应缺口</td>
+            <td class="up">偏多铜</td>
+            <td>多铜空铝，铜基本面更紧</td>
+          </tr>
+          <tr>
+            <td>螺纹-铁矿石价差</td>
+            <td class="spread-val">~2,337</td>
+            <td>高炉利润挤压</td>
+            <td class="down">缩窄</td>
+            <td>多铁矿石空螺纹（做缩利润）</td>
+          </tr>
+          <tr>
+            <td>豆油-棕榈油价差</td>
+            <td class="spread-val">偏窄</td>
+            <td>棕榈油出口强劲支撑</td>
+            <td class="up">扩大</td>
+            <td>多豆油空棕榈油</td>
+          </tr>
+          <tr>
+            <td>原油-PTA产业链利润</td>
+            <td class="spread-val">PTA加工费修复中</td>
+            <td>原油跌→PX成本下移</td>
+            <td class="up">PTA加工费走扩</td>
+            <td>关注PTA加工费做多机会</td>
+          </tr>
+          <tr>
+            <td>沪金-COMEX金价差</td>
+            <td class="spread-val">内外价差收敛</td>
+            <td>人民币升值+进口成本下降</td>
+            <td>—</td>
+            <td>观望，人民币持续升值则内盘承压</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== Position & Capital Flow ===== -->
+  <div id="i-position" class="section">
+    <h3 class="section-title">💰 资金流向与持仓变化</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>品种/标的</th><th>持仓变化</th><th>方向</th><th>解读</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>SPDR黄金ETF</td><td>1009.298吨（不变）</td><td>—</td><td>机构持仓稳定，未出现大规模抛售</td></tr>
+          <tr><td>iShares白银ETF</td><td>15024.77吨（-19.68吨）</td><td class="down">减仓</td><td>白银机构持仓小幅流出</td></tr>
+          <tr><td>亚盘黄金ETF(159934)</td><td>资金开始增加</td><td class="up">流入</td><td>投资资金回流贵金属迹象</td></tr>
+          <tr><td>CFTC铜净多头</td><td>增加</td><td class="up">加多</td><td>投机资金看多铜价</td></tr>
+          <tr><td>美国在线钻探油井</td><td>450座（-2座周环比）</td><td class="down">减少</td><td>美国原油产量增长放缓</td></tr>
+          <tr><td>全球央行购金(5月)</td><td>净购41吨</td><td class="up">增加</td><td>购金节奏加快，中长期支撑金价</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== Warehouse Receipts & Inventory ===== -->
+  <div id="i-inventory" class="section">
+    <h3 class="section-title">📦 仓单与库存变化</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>品种</th><th>仓单变化</th><th>库存变化</th><th>供需解读</th><th>信号</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/sa2609.html" target="_blank">纯碱</a></td>
+            <td>2,766张（持平）</td>
+            <td>厂家总库存179.24万吨（+1.11万吨）</td>
+            <td>弱需求+高库存持续累积，供需偏宽格局未改善</td>
+            <td class="down">偏空</td>
+          </tr>
+          <tr>
+            <td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/ur2609.html" target="_blank">尿素</a></td>
+            <td>6,270张（+186张）</td>
+            <td>行业日产21.57万吨，产能利用率90.41%</td>
+            <td>仓单增加+高日产+弱需求，工农业需求支撑乏力</td>
+            <td class="down">偏空</td>
+          </tr>
+          <tr>
+            <td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/fu2609.html" target="_blank">燃料油</a></td>
+            <td>-11,050（7/27）</td>
+            <td>—</td>
+            <td>仓单持续流出，供应端实质制约仍在</td>
+            <td style="color:var(--text-muted)">中性</td>
+          </tr>
+          <tr>
+            <td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/ag2610.html" target="_blank">白银</a></td>
+            <td>+168,972（7/27）</td>
+            <td>iShares白银ETF 15,024.77吨（-19.68吨）</td>
+            <td>仓单大幅增加+ETF减仓，机构白银持仓小幅流出</td>
+            <td class="down">偏空</td>
+          </tr>
+          <tr>
+            <td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/MA2609.html" target="_blank">甲醇</a></td>
+            <td>—</td>
+            <td>沿海库存57.07万吨（+13.56万吨，+31.17%）</td>
+            <td>到港船货集中卸货入库，库存暴增，可流通货源22.60万吨</td>
+            <td class="down">偏空</td>
+          </tr>
+          <tr>
+            <td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/eg2609.html" target="_blank">乙二醇</a></td>
+            <td>—</td>
+            <td>华东主港库存46.3万吨（+0.6万吨）</td>
+            <td>进口到货致库存窄幅回升，但绝对库存维持低位</td>
+            <td style="color:var(--text-muted)">中性偏多</td>
+          </tr>
+          <tr>
+            <td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/TA2609.html" target="_blank">PTA</a></td>
+            <td>—</td>
+            <td>开工率59.2%（+2.5pct），同比-20.5pct</td>
+            <td>装置陆续重启，供应回升，但8月延续去库预期</td>
+            <td style="color:var(--text-muted)">中性</td>
+          </tr>
+          <tr>
+            <td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/fg2609.html" target="_blank">玻璃</a></td>
+            <td>—</td>
+            <td>企业库存7,009箱（-38万重箱）</td>
+            <td>库存高位略降但仍处高位，有待进一步消化</td>
+            <td style="color:var(--text-muted)">中性偏空</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-top:6px" class="dynamic-source" data-source-sector="inventory">
+      数据来源：<span class="source-links">海证期货 · 新浪财经 · 申银万国期货</span>
+    </p>
+    </p>
+  </div>
+
+  <!-- ===== Exchange Announcements ===== -->
+  <div id="i-announce" class="section">
+    <h3 class="section-title">📋 交易所公告与风控提示</h3>
+
+    <div class="announce-card">
+      <div class="ann-header">
+        <span class="ann-exchange">上期所</span>
+        <span class="ann-title">FU2608合约保证金率调整至20%</span>
+      </div>
+      <div class="ann-body">
+        因2608合约即将进入交割月，自2026年7月28日收盘结算时起，<strong>燃料油FU2608合约交易保证金率调整为20%</strong>。最后交易日前第三个交易日，按交易所结算风控细则执行。
+      </div>
+    </div>
+
+    <div class="announce-card">
+      <div class="ann-header">
+        <span class="ann-exchange">能源中心</span>
+        <span class="ann-title">LU2608、SC2608合约保证金率调整至20%</span>
+      </div>
+      <div class="ann-body">
+        自2026年7月28日收盘结算时起，<strong>低硫燃油LU2608、原油SC2608合约交易保证金率调整为20%</strong>。交割月前最后交易日风控调整。
+      </div>
+    </div>
+
+    <div class="announce-card" style="border-left-color:var(--red)">
+      <div class="ann-header">
+        <span class="ann-exchange" style="background:var(--red-bg);color:var(--red)">郑商所</span>
+        <span class="ann-title">纯苯、苯乙烯触发跌停板，保证金上调至11%</span>
+      </div>
+      <div class="ann-body">
+        因出现第1个跌停板：<strong>BZ2610-2611、BZ2701-2702合约</strong>交易所保证金调整至11%，涨跌停板幅度9%；<strong>EB2610合约</strong>交易所保证金调整至11%，涨跌停板幅度9%。受原油暴跌影响，能化品种大面积跌停。
+      </div>
+    </div>
+
+    <div class="announce-card">
+      <div class="ann-header">
+        <span class="ann-exchange">各交易所</span>
+        <span class="ann-title">2608合约即将进入交割月，保证金普遍提高</span>
+      </div>
+      <div class="ann-body">
+        7月31日为交割月前一月最后一个交易日：<strong>大商所</strong>b/jd/m/rr2608合约26%，bz/eb/eg/i/j/jm/l/p/pg/pp/v/y2608合约26%，fb2608合约33%；<strong>郑商所</strong>FG/MA/PF/PL/PR/PX/RM/SA/SF/SH/SM/TA/UR608合约26%；<strong>广期所</strong>ps/si2608合约27%，pd/pt2608合约27%，lc2608合约30%；<strong>上期所</strong>al/ao/br/cu/op/pb/ru/sp/zn2608合约21%，bu/ni/sn2608合约22%。
+      </div>
+    </div>
+
+    <div class="announce-card">
+      <div class="ann-header">
+        <span class="ann-exchange">上期所（7月2日起执行）</span>
+        <span class="ann-title">黄金等品种涨跌停板和保证金比例调整</span>
+      </div>
+      <div class="ann-body">
+        <strong>黄金AU</strong>合约涨跌停板幅度14%，套保保证金15%，一般持仓保证金16%；<strong>铜/铝/锌/铅/氧化铝</strong>涨跌停板9%，套保10%，一般持仓11%；<strong>镍</strong>涨跌停板10%，套保11%，一般持仓12%。
+      </div>
+    </div>
+
+    <p style="font-size:11px;color:var(--text-muted);margin-top:6px" class="dynamic-source" data-source-sector="exchange">
+      数据来源：<span class="source-links">天虹期货 · 华晟期货 · 财达期货 · 宝城期货 · 渤海期货</span>
+    </p>
+    </p>
+  </div>
+
+  <!-- ===== Macro Calendar ===== -->
+  <div id="i-macro" class="section">
+    <h3 class="section-title">📅 本周宏观日历</h3>
+    <div class="macro-cal">
+      <div class="macro-item">
+        <span class="macro-date">7/29 周二</span>
+        <span class="macro-name">美国7月谘商会消费者信心指数</span>
+        <span class="macro-impact impact-medium">中</span>
+      </div>
+      <div class="macro-item">
+        <span class="macro-date" style="color:var(--red)">7/30 周四 02:00</span>
+        <span class="macro-name">美联储FOMC利率决议 + 鲍威尔新闻发布会</span>
+        <span class="macro-impact impact-high">高</span>
+      </div>
+      <div class="macro-item">
+        <span class="macro-date">7/30 周四</span>
+        <span class="macro-name">美国二季度GDP初值</span>
+        <span class="macro-impact impact-high">高</span>
+      </div>
+      <div class="macro-item">
+        <span class="macro-date">7/31 周五</span>
+        <span class="macro-name">美国6月PCE物价指数（美联储最关注通胀指标）</span>
+        <span class="macro-impact impact-high">高</span>
+      </div>
+      <div class="macro-item">
+        <span class="macro-date">7/31 周五</span>
+        <span class="macro-name">中国7月官方制造业PMI</span>
+        <span class="macro-impact impact-medium">中</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== International Market ===== -->
+  <div id="i-intl" class="section">
+    <h3 class="section-title">🌍 外盘联动 <span class="tag tag-intl">LME/CBOT/ICE</span></h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>品种</th><th>最新价</th><th>涨跌幅</th><th>单位</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/cu2609.html" target="_blank">LME期铜</a></td><td class="up">13,759.5</td><td class="up">+0.84%</td><td>美元/吨</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/al2609.html" target="_blank">LME期铝</a></td><td class="up">3,173.0</td><td class="up">+0.43%</td><td>美元/吨</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/zn2609.html" target="_blank">LME期锌</a></td><td class="up">3,615.0</td><td class="up">+0.64%</td><td>美元/吨</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/pb2609.html" target="_blank">LME期铅</a></td><td class="up">1,892.0</td><td class="up">+0.26%</td><td>美元/吨</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/ni2609.html" target="_blank">LME期镍</a></td><td class="down">17,270.0</td><td class="down">-0.63%</td><td>美元/吨</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/sn2609.html" target="_blank">LME期锡</a></td><td class="up">54,380.0</td><td class="up">+1.11%</td><td>美元/吨</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/sc2609.html" target="_blank">WTI原油</a></td><td class="down">81.91</td><td class="down">-8.29%</td><td>美元/桶</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/sc2609.html" target="_blank">布伦特原油</a></td><td class="down">88.36</td><td class="down">-8.70%</td><td>美元/桶</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/au2610.html" target="_blank">COMEX黄金</a></td><td class="up">4,078.60</td><td class="up">+0.19%</td><td>美元/盎司</td></tr>
+          <tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/au2610.html" target="_blank">美元指数</a></td><td class="up">101.53</td><td class="up">+0.06%</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== Gold Institutional Section ===== -->
+  <div id="i-gold" class="section">
+    <h3 class="section-title">🥇 黄金专题：机构级深度分析</h3>
+
+    <div class="gold-inst-card">
+      <h4>一、价格体系全景</h4>
+      <div class="gold-price-grid">
+        <div class="gold-price-card">
+          <div class="title">上金所 Au9999（原料基准）</div>
+          <div class="price">890.80 <span style="font-size:12px;color:var(--text-muted)">元/克</span></div>
+          <div class="sub down">-0.35% · <a href="https://quote.eastmoney.com/qihuo/au2610.html" target="_blank">查看走势 ↗</a></div>
+        </div>
+        <div class="gold-price-card">
+          <div class="title">黄金T+D</div>
+          <div class="price">888.05 <span style="font-size:12px;color:var(--text-muted)">元/克</span></div>
+          <div class="sub down">-0.45% · <a href="https://quote.eastmoney.com/qihuo/au2610.html" target="_blank">查看走势 ↗</a></div>
+        </div>
+        <div class="gold-price-card">
+          <div class="title">沪金主力 AU2610</div>
+          <div class="price"><span data-live-price="AU2610">891.12</span> <span style="font-size:12px;color:var(--text-muted)">元/克</span></div>
+          <div class="sub down">-0.18% · <a href="https://quote.eastmoney.com/qihuo/au2610.html" target="_blank">查看走势 ↗</a></div>
+        </div>
+        <div class="gold-price-card">
+          <div class="title">现货黄金（伦敦金）</div>
+          <div class="price">4,075.69 <span style="font-size:12px;color:var(--text-muted)">美元/盎司</span></div>
+          <div class="sub down">-16.08 · <a href="https://quote.eastmoney.com/qihuo/au2610.html" target="_blank">查看走势 ↗</a></div>
+        </div>
+        <div class="gold-price-card">
+          <div class="title">COMEX黄金期货</div>
+          <div class="price">4,078.60 <span style="font-size:12px;color:var(--text-muted)">美元/盎司</span></div>
+          <div class="sub up">+0.19% · <a href="https://quote.eastmoney.com/qihuo/au2610.html" target="_blank">查看走势 ↗</a></div>
+        </div>
+        <div class="gold-price-card">
+          <div class="title">深圳水贝批发（裸金）</div>
+          <div class="price">1,052 <span style="font-size:12px;color:var(--text-muted)">元/克</span></div>
+          <div class="sub" style="color:var(--text-muted)">工费另计</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gold-inst-card">
+      <h4>二、定价逻辑拆解</h4>
+      <table>
+        <thead>
+          <tr><th>层级</th><th>价格(元/克)</th><th>较原料溢价</th><th>定价机制</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>上金所Au9999</td><td>890.80</td><td>基准</td><td>交易所撮合定价，国内所有黄金定价之锚</td></tr>
+          <tr><td>黄金T+D</td><td>888.05</td><td>-2.75</td><td>上金所现货延期交收，含递延费</td></tr>
+          <tr><td>沪金期货</td><td>891.12</td><td>+0.32</td><td>SHFE期货定价，含时间价值</td></tr>
+          <tr><td>银行投资金条</td><td>905-922</td><td>+14~31</td><td>原料价+加工费+品牌溢价（15-32元）</td></tr>
+          <tr><td>水贝批发裸金</td><td>1,052</td><td>+161</td><td>含加工费+渠道利润，批发市场定价</td></tr>
+          <tr><td>品牌金饰零售</td><td>1,242-1,248</td><td>+351~357</td><td>含品牌溢价+门店租金+人工+税费</td></tr>
+          <tr><td>黄金回收价</td><td>871-879</td><td>-12~-20</td><td>低于原料价，回收商折价收购</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="gold-inst-card">
+      <h4>三、银行投资金条报价矩阵</h4>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>银行</th><th>报价(元/克)</th><th>较原料溢价</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>浦发银行</td><td>922.00</td><td>+31.20</td><td>溢价最高</td></tr>
+            <tr><td>农业银行</td><td>915.40</td><td>+24.60</td><td>—</td></tr>
+            <tr><td>工商银行（如意金条）</td><td>913.00</td><td>+22.20</td><td>主流选择</td></tr>
+            <tr><td>平安银行</td><td>912.00</td><td>+21.20</td><td>—</td></tr>
+            <tr><td>中国银行</td><td>911.10</td><td>+20.30</td><td>—</td></tr>
+            <tr><td>建设银行（龙鼎金条）</td><td>909.90</td><td>+19.10</td><td>—</td></tr>
+            <tr><td>中信银行</td><td>905.40</td><td>+14.60</td><td>溢价最低</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:6px">来源：<a href="javascript:void(0)" style="pointer-events:none;opacity:0.6" target="_blank">腾讯新闻</a></p>
+    </div>
+
+    <div class="gold-inst-card">
+      <h4>四、品牌金饰零售报价</h4>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>品牌</th><th>足金饰品(元/克)</th><th>投资金条(元/克)</th><th>铂金(元/克)</th><th>日期</th></tr>
+          </thead>
+          <tbody>
+            <tr><td style="color:var(--gold);font-weight:600">周大福</td><td>1,248</td><td>1,095</td><td>629</td><td>7-27</td></tr>
+            <tr><td style="color:var(--gold);font-weight:600">周大生</td><td>1,248</td><td>1,095</td><td>629</td><td>7-27</td></tr>
+            <tr><td style="color:var(--gold);font-weight:600">潮宏基</td><td>1,248</td><td>1,095</td><td>629</td><td>7-27</td></tr>
+            <tr><td style="color:var(--gold);font-weight:600">六福珠宝</td><td>1,246</td><td>1,093</td><td>629</td><td>7-27</td></tr>
+            <tr><td style="color:var(--gold);font-weight:600">老庙黄金</td><td>1,246</td><td>1,058</td><td>650</td><td>7-27</td></tr>
+            <tr><td style="color:var(--gold);font-weight:600">金至尊</td><td>1,246</td><td>—</td><td>629</td><td>7-27</td></tr>
+            <tr><td style="color:var(--gold);font-weight:600">周生生</td><td>1,245</td><td>1,092</td><td>629</td><td>7-27</td></tr>
+            <tr><td style="color:var(--gold);font-weight:600">周六福</td><td>1,243</td><td>1,090</td><td>649</td><td>7-27</td></tr>
+            <tr><td style="color:var(--gold);font-weight:600">老凤祥</td><td>1,242</td><td>—</td><td>650</td><td>7-27</td></tr>
+            <tr><td style="color:var(--gold);font-weight:600">菜百首饰</td><td>1,225</td><td>—</td><td>595</td><td>7-27</td></tr>
+            <tr><td style="color:var(--gold);font-weight:600">中国黄金</td><td>1,211~1,238</td><td>—</td><td>—</td><td>7-27</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:6px">来源：<a href="https://quote.cngold.org/gjs/swhj.html" target="_blank">金投网</a></p>
+    </div>
+
+    <div class="gold-inst-card">
+      <h4>五、影响金价的核心因子</h4>
+      <div class="event-card gold-event">
+        <div class="event-header">
+          <span class="event-tag" style="background:var(--gold-bg);color:var(--gold)">利多</span>
+          <span class="event-title">特朗普施压美联储降息，提升黄金避险吸引力</span>
+          <span class="event-impact impact-medium">中影响</span>
+        </div>
+        <div class="event-body">特朗普公开表示"美国应拥有全球最低的利率"。总统干预美联储货币政策放大市场不确定性，提升黄金避险吸引力。</div>
+        <div class="event-source">📎 <a href="javascript:void(0)" style="pointer-events:none;opacity:0.6" target="_blank">国信期货</a> · <a href="javascript:void(0)" style="pointer-events:none;opacity:0.6" target="_blank">陆家嘴财经早餐</a></div>
+      </div>
+      <div class="event-card gold-event">
+        <div class="event-header">
+          <span class="event-tag" style="background:var(--gold-bg);color:var(--gold)">利多</span>
+          <span class="event-title">全球央行5月净购金41吨，购金节奏加快</span>
+          <span class="event-impact impact-medium">中影响</span>
+        </div>
+        <div class="event-body">世界黄金协会数据：5月全球央行净购金41吨。央行持续购金为金价提供中长期支撑。亚盘黄金ETF(159934)资金开始增加。</div>
+        <div class="event-source">📎 <a href="javascript:void(0)" style="pointer-events:none;opacity:0.6" target="_blank">腾讯新闻</a></div>
+      </div>
+      <div class="event-card gold-event">
+        <div class="event-header">
+          <span class="event-tag" style="background:var(--red-bg);color:var(--red)">利空</span>
+          <span class="event-title">美联储加息预期高企，美元走强压制金价</span>
+          <span class="event-impact impact-high">高影响</span>
+        </div>
+        <div class="event-body">CME美联储观察：7月加息25BP概率36.3%，9月81.5%，10月87.3%。美元指数触及四周高点101.53。核心耐用品订单超预期(+0.9%)，核心资本财出货量+1.9%创2021年12月以来最大增幅。城堡证券预言本周可能加息。</div>
+        <div class="event-source">📎 <a href="javascript:void(0)" style="pointer-events:none;opacity:0.6" target="_blank">财联社</a> · <a href="javascript:void(0)" style="pointer-events:none;opacity:0.6" target="_blank">同花顺</a></div>
+      </div>
+      <div class="event-card gold-event">
+        <div class="event-header">
+          <span class="event-tag" style="background:var(--red-bg);color:var(--red)">利空</span>
+          <span class="event-title">中东地缘风险缓和，避险需求减弱</span>
+          <span class="event-impact impact-medium">中影响</span>
+        </div>
+        <div class="event-body">美伊暂停互袭，地缘风险阶段性缓和。但局势呈"暂停互袭但未实质解决"僵持状态，特朗普保留重启军事行动选项。胡塞武装仍打击沙特原油运输基础设施。</div>
+        <div class="event-source">📎 <a href="javascript:void(0)" style="pointer-events:none;opacity:0.6" target="_blank">国信期货</a></div>
+      </div>
+    </div>
+
+    <div class="gold-inst-card">
+      <h4>六、机构研判与展望</h4>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.7">
+        <strong>南华期货：</strong>贵金属在深度回调后已部分定价美联储鹰派预期，估值端进一步下修空间有限。当前加息预期交易已较为拥挤——市场已完全定价美联储年内加息一次，于明年4月大概率再加息一次。基准情景下美联储年内降息概率偏低，制约下半年反弹高度；但2027年Q2美联储仍有望重启降息窗口。
+      </p>
+      <ul style="margin-left:18px;margin-top:8px">
+        <li style="font-size:13px;color:var(--text-secondary);margin-bottom:4px"><strong>技术面：</strong>沪金880-910元/克，沪银14000-14800元/千克</li>
+        <li style="font-size:13px;color:var(--text-secondary);margin-bottom:4px"><strong>ETF持仓：</strong>SPDR 1009.298吨（不变）；iShares白银 15024.77吨（-19.68吨）</li>
+        <li style="font-size:13px;color:var(--text-secondary);margin-bottom:4px"><strong>下半年展望：</strong>黄金配置价值显现，需事件催化推动突破，年底目标区间有望上移</li>
+        <li style="font-size:13px;color:var(--text-secondary);margin-bottom:4px"><strong>上行催化：</strong>AI投资回报遭质疑、降息预期重启、美国财政债务引发美元信用担忧</li>
+        <li style="font-size:13px;color:var(--text-secondary);margin-bottom:4px"><strong>铂金：</strong>2026年全球供需缺口扩大，反弹弹性较强</li>
+        <li style="font-size:13px;color:var(--text-secondary);margin-bottom:4px"><strong>钯金：</strong>1200美元/盎司已触及矿山AISC全维持成本线，基本面偏弱</li>
+      </ul>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:8px">来源：<a href="https://www.163.com/dy/article/L2TPKQFT0512B07B.html" target="_blank">黄金早参</a> · <a href="https://cj.sina.com.cn/articles/view/2694380914/a098fd7202001ma92" target="_blank">中国白银网</a> · <a href="javascript:void(0)" style="pointer-events:none;opacity:0.6" target="_blank">国信期货</a></p>
+    </div>
+  </div>
+
+</div><!-- end institutional-view -->
+
+  <!-- ===== Disclaimer (shared) ===== -->
+  <div class="disclaimer">
+    <strong>⚠️ 风险提示与免责声明</strong><br>
+    本报告仅供信息参考，不构成任何投资建议。期货交易具有高杠杆、高风险特征，入市需谨慎。报告中所有价格数据来源于公开市场信息，可能存在延迟，请以交易所实时行情为准。点击各期货品种名称可跳转至东方财富期货实时行情页面查看走势。报告数据更新时间：2026年7月28日（夜盘收盘数据+日盘数据）。本周重点关注：7月30日凌晨美联储FOMC利率决议、6月PCE数据、二季度GDP初值。<br><br>
+    <strong>数据来源：</strong>上海期货交易所(SHFE)、上海黄金交易所(SGE)、SMM上海有色网、东方财富网、同花顺、国信期货、申银万国期货、财达期货、光大期货、南华期货、金投网、生意社、Mysteel、新华财经、证券时报、财联社等。
+  </div>
+
+  <div style="height:40px"></div>
+</div>
+
+<script>
+function switchMode(mode) {
+  document.body.className = mode === 'institutional' ? 'mode-institutional' : 'mode-personal';
+  document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+  if (mode === 'institutional') {
+    document.querySelectorAll('.toggle-btn')[1].classList.add('active');
+  } else {
+    document.querySelectorAll('.toggle-btn')[0].classList.add('active');
+  }
+  try { localStorage.setItem('futures-report-mode', mode); } catch(e) {}
+  // Scroll to top on mode switch
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Update timeline when switching to institutional view
+  if (mode === 'institutional') {
+    setTimeout(function() { try { updateTimeline(); } catch(e) {} }, 300);
+  }
+}
+
+try {
+  const saved = localStorage.getItem('futures-report-mode');
+  if (saved === 'institutional') switchMode('institutional');
+} catch(e) {}
+
+function updateTime() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const s = String(now.getSeconds()).padStart(2, '0');
+  const el = document.getElementById('updateTime');
+  if (el) el.textContent = '当前时间 ' + h + ':' + m + ':' + s;
+}
+updateTime();
+setInterval(updateTime, 1000);
+
+/* === Market status check === */
+var marketOpen = false;
+let autoRefreshTimer = null;
+
+function checkMarketStatus() {
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+  const minutes = h * 60 + m;
+  const day = now.getDay(); // 0=Sun, 6=Sat
+  const el = document.getElementById('marketStatus');
+  const banner = document.getElementById('marketModeBanner');
+  const bannerText = document.getElementById('marketModeText');
+  if (!el) return;
+
+  var isOpen = false;
+  var statusText = '';
+
+  if (day === 0 || day === 6) {
+    statusText = '休市时段 · 显示收盘价';
+    isOpen = false;
+  }
+  // Day session: 9:00-11:30, 13:30-15:00
+  // Night session: 21:00-01:00 (some until 02:30)
+  else if ((minutes >= 540 && minutes < 690) || (minutes >= 810 && minutes < 900)) {
+    statusText = '交易时段 · 显示实时价';
+    isOpen = true;
+  } else if (minutes >= 1260 || minutes < 60) {
+    statusText = '交易时段 · 显示实时价';
+    isOpen = true;
+  } else {
+    statusText = '休市时段 · 显示收盘价';
+    isOpen = false;
+  }
+
+  marketOpen = isOpen;
+  el.textContent = statusText;
+  el.className = 'market-status ' + (isOpen ? 'open' : 'closed');
+
+  // Update the mode banner
+  if (banner && bannerText) {
+    if (isOpen) {
+      banner.className = 'market-mode-banner open';
+      banner.querySelector('.icon').textContent = '🔴';
+      bannerText.textContent = '交易时段，显示实时价（休市后将自动切换为收盘价）';
+    } else {
+      banner.className = 'market-mode-banner closed';
+      banner.querySelector('.icon').textContent = '⏸️';
+      bannerText.textContent = '休市时段，显示收盘价（下一交易日开盘将自动切换为实时价）';
+    }
+  }
+
+  // Control price refresh UI based on market status
+  var refreshBtn = document.getElementById('refreshBtn');
+  var autoToggleLabel = document.querySelector('.auto-toggle');
+  var autoCheckbox = document.getElementById('autoRefresh');
+  var tickerClosedBadge = document.getElementById('tickerClosedBadge');
+
+  if (isOpen) {
+    // Market open: enable all refresh controls
+    if (refreshBtn) refreshBtn.classList.remove('disabled');
+    if (autoToggleLabel) autoToggleLabel.classList.remove('disabled');
+    if (tickerClosedBadge) tickerClosedBadge.style.display = 'none';
+    if (autoToggleLabel) {
+      var labelSpan = autoToggleLabel.querySelector('span:last-child');
+      if (labelSpan) labelSpan.textContent = '自动刷新(价格10s·快讯/大事60s)';
+    }
+  } else {
+    // Market closed: keep all controls ENABLED
+    // Price auto-refresh interval is stopped (prices don't change when closed),
+    // but manual refresh still works (fetches closing prices),
+    // and news/events auto-refresh continues normally
+    if (tickerClosedBadge) tickerClosedBadge.style.display = 'inline-block';
+    if (autoToggleLabel) {
+      var labelSpan2 = autoToggleLabel.querySelector('span:last-child');
+      if (labelSpan2) labelSpan2.textContent = '自动刷新(收盘价·快讯/大事60s)';
+    }
+    // Stop price auto-refresh interval only (NOT news/events)
+    if (autoRefreshTimer) {
+      clearInterval(autoRefreshTimer);
+      autoRefreshTimer = null;
+    }
+    // NOTE: Do NOT uncheck autoCheckbox — let news/events auto-refresh continue
+    // NOTE: Do NOT clear newsRefreshTimer —
+    // news is completely independent of market status
+  }
+}
+checkMarketStatus();
+setInterval(checkMarketStatus, 30000);
+
+function isMarketOpen() {
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+  const minutes = h * 60 + m;
+  const day = now.getDay();
+  if (day === 0 || day === 6) return false;
+  // Day session 09:00-11:30, 13:30-15:00; night session 21:00-23:00/01:00
+  if ((minutes >= 540 && minutes < 690) || (minutes >= 810 && minutes < 900)) return true;
+  if (minutes >= 1260 || minutes < 60) return true;
+  return false;
+}
+
+/* === Temperature card interactive expand/collapse === */
+function toggleFuturesPanel(type) {
+  const panel = document.getElementById('panel-' + type);
+  const card = document.getElementById('card-' + type);
+  const isOpen = panel.classList.contains('show');
+  // Close all panels and remove active states
+  document.querySelectorAll('.futures-panel').forEach(p => p.classList.remove('show'));
+  document.querySelectorAll('.temp-card.clickable').forEach(c => c.classList.remove('active-card'));
+  // Toggle the clicked one
+  if (!isOpen) {
+    panel.classList.add('show');
+    card.classList.add('active-card');
+    // Smooth scroll to panel
+    setTimeout(() => {
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+  }
+}
+
+function closeFuturesPanel(type) {
+  const panel = document.getElementById('panel-' + type);
+  const card = document.getElementById('card-' + type);
+  panel.classList.remove('show');
+  card.classList.remove('active-card');
+}
+
+/* === Real-time price fetching via JSONP (East Money push2 API) === */
+// Uses East Money push2 JSONP API - no proxy server needed, works from any domain
+// API: https://push2.eastmoney.com/api/qt/ulist.np/get?secids=...&fields=...&cb=callback
+
+// East Money secid mapping (exchange prefix + contract code)
+const SECID_MAP = {
+  // SHFE = 113
+  'CU2609': '113.CU2609', 'AL2609': '113.AL2609', 'AU2610': '113.AU2610',
+  'AG2610': '113.AG2610', 'NI2609': '113.NI2609', 'PB2609': '113.PB2609',
+  'ZN2609': '113.ZN2609', 'SN2609': '113.SN2609', 'RB2610': '113.RB2610',
+  'HC2610': '113.HC2610', 'SS2609': '113.SS2609', 'AO2609': '113.AO2609',
+  'FU2609': '113.FU2609', 'BU2609': '113.BU2609', 'BR2609': '113.BR2609',
+  // DCE = 114
+  'I2609': '114.I2609', 'J2609': '114.J2609', 'JM2609': '114.JM2609',
+  'M2609': '114.M2609', 'Y2609': '114.Y2609', 'P2609': '114.P2609',
+  'LH2609': '114.LH2609', 'JD2609': '114.JD2609', 'EB2609': '114.EB2609',
+  'EG2609': '114.EG2609',
+  // ZCE = 115 (3-digit month format)
+  'TA2609': '115.TA609', 'MA2609': '115.MA609', 'SA2609': '115.SA609',
+  'OI2609': '115.OI609', 'UR2609': '115.UR609', 'FG2609': '115.FG609',
+  // INE = 142
+  'SC2609': '142.SC2609', 'LU2609': '142.LU2609', 'BC2608': '142.BC2608',
+  // COMEX international
+  'GCSPT': '101.GC00Y', 'SISPT': '101.SI00Y',
+};
+
+// JSONP helper: load a URL with callback parameter
+function jsonpFetch(url, callbackName, timeout) {
+  timeout = timeout || 10000;
+  return new Promise(function(resolve, reject) {
+    var cbName = callbackName || ('jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 10000));
+    var script = document.createElement('script');
+    var timer = null;
+    var resolved = false;
+
+    window[cbName] = function(data) {
+      resolved = true;
+      if (timer) clearTimeout(timer);
+      delete window[cbName];
+      script.remove();
+      resolve(data);
+    };
+
+    script.onerror = function() {
+      if (resolved) return;
+      if (timer) clearTimeout(timer);
+      delete window[cbName];
+      script.remove();
+      reject(new Error('JSONP request failed'));
+    };
+
+    timer = setTimeout(function() {
+      if (resolved) return;
+      delete window[cbName];
+      script.remove();
+      reject(new Error('JSONP timeout'));
+    }, timeout);
+
+    var separator = url.indexOf('?') >= 0 ? '&' : '?';
+    script.src = url + separator + 'cb=' + cbName;
+    script.charset = 'utf-8';
+    document.head.appendChild(script);
+  });
+}
+
+const FUTURES_CONTRACTS = [
+  // SHFE
+  { name:'沪铜',     code:'CU2609', url:'cu2609',  sina:'nf_CU2609', dec:0 },
+  { name:'沪铝',     code:'AL2609', url:'al2609',  sina:'nf_AL2609', dec:0 },
+  { name:'沪金',     code:'AU2610', url:'au2610',  sina:'nf_AU2610', dec:2 },
+  { name:'沪银',     code:'AG2610', url:'ag2610',  sina:'nf_AG2610', dec:0 },
+  { name:'沪镍',     code:'NI2609', url:'ni2609',  sina:'nf_NI2609', dec:0 },
+  { name:'沪铅',     code:'PB2609', url:'pb2609',  sina:'nf_PB2609', dec:0 },
+  { name:'沪锌',     code:'ZN2609', url:'zn2609',  sina:'nf_ZN2609', dec:0 },
+  { name:'沪锡',     code:'SN2609', url:'sn2609',  sina:'nf_SN2609', dec:0 },
+  { name:'螺纹钢',   code:'RB2610', url:'rb2610',  sina:'nf_RB2610', dec:0 },
+  { name:'热轧卷板', code:'HC2610', url:'hc2610',  sina:'nf_HC2610', dec:0 },
+  { name:'不锈钢',   code:'SS2609', url:'ss2609',  sina:'nf_SS2609', dec:0 },
+  { name:'氧化铝',   code:'AO2609', url:'ao2609',  sina:'nf_AO2609', dec:0 },
+  { name:'燃料油',   code:'FU2609', url:'fu2609',  sina:'nf_FU2609', dec:0 },
+  { name:'沥青',     code:'BU2609', url:'bu2609',  sina:'nf_BU2609', dec:0 },
+  { name:'合成橡胶', code:'BR2609', url:'br2609',  sina:'nf_BR2609', dec:0 },
+  // DCE
+  { name:'铁矿石',   code:'I2609',  url:'i2609',   sina:'nf_I2609',  dec:1 },
+  { name:'焦炭',     code:'J2609',  url:'j2609',   sina:'nf_J2609',  dec:0 },
+  { name:'焦煤',     code:'JM2609', url:'jm2609',  sina:'nf_JM2609', dec:1 },
+  { name:'豆粕',     code:'M2609',  url:'m2609',   sina:'nf_M2609',  dec:0 },
+  { name:'豆油',     code:'Y2609',  url:'y2609',   sina:'nf_Y2609',  dec:0 },
+  { name:'棕榈油',   code:'P2609',  url:'p2609',   sina:'nf_P2609',  dec:0 },
+  { name:'生猪',     code:'LH2609', url:'lh2609',  sina:'nf_LH2609', dec:0 },
+  { name:'鸡蛋',     code:'JD2609', url:'jd2609',  sina:'nf_JD2609', dec:0 },
+  { name:'苯乙烯',   code:'EB2609', url:'eb2609',  sina:'nf_EB2609', dec:0 },
+  { name:'乙二醇',   code:'EG2609', url:'eg2609',  sina:'nf_EG2609', dec:0 },
+  // ZCE
+  { name:'PTA',      code:'TA2609', url:'TA2609',  sina:'nf_TA2609', dec:0 },
+  { name:'甲醇',     code:'MA2609', url:'MA2609',  sina:'nf_MA2609', dec:0 },
+  { name:'纯碱',     code:'SA2609', url:'sa2609',  sina:'nf_SA2609', dec:0 },
+  { name:'菜油',     code:'OI2609', url:'oi609',   sina:'nf_OI2609', dec:0 },
+  { name:'尿素',     code:'UR2609', url:'ur609',   sina:'nf_UR2609', dec:0 },
+  { name:'玻璃',     code:'FG2609', url:'fg609',   sina:'nf_FG2609', dec:0 },
+  // INE
+  { name:'原油',     code:'SC2609', url:'sc2609',  sina:'nf_SC2609', dec:1 },
+  { name:'低硫燃油', code:'LU2609', url:'lu2609',  sina:'nf_LU2609', dec:0 },
+  { name:'国际铜',   code:'BC2608', url:'bc2608',  sina:'nf_BC2608', dec:0 },
+  // International (hidden from ticker, used for gold guide)
+  { name:'COMEX黄金', code:'GCSPT', url:'gc',     sina:'hf_GC',  dec:1, hidden:true },
+  { name:'COMEX白银', code:'SISPT', url:'si',     sina:'hf_SI',  dec:3, hidden:true },
+];
+
+// ===== Contract metadata maps =====
+const CONTRACT_SECTOR = {
+  // SHFE
+  'CU2609':'有色','AL2609':'有色','AU2610':'贵金属','AG2610':'贵金属',
+  'NI2609':'有色','PB2609':'有色','ZN2609':'有色','SN2609':'有色',
+  'RB2610':'黑色','HC2610':'黑色','SS2609':'有色','AO2609':'有色',
+  'FU2609':'能化','BU2609':'能化','BR2609':'能化',
+  // DCE
+  'I2609':'黑色','J2609':'黑色','JM2609':'黑色',
+  'M2609':'农产品','Y2609':'农产品','P2609':'农产品','LH2609':'农产品','JD2609':'农产品',
+  'EB2609':'能化','EG2609':'能化',
+  // ZCE
+  'TA2609':'能化','MA2609':'能化','SA2609':'建材',
+  'OI2609':'农产品','UR2609':'建材','FG2609':'建材',
+  // INE
+  'SC2609':'能化','LU2609':'能化','BC2608':'有色',
+  // International
+  'GCSPT':'贵金属','SISPT':'贵金属',
+};
+
+const SECTOR_COLORS = {
+  '有色': { bg: 'var(--blue)', text: '#fff' },
+  '贵金属': { bg: 'var(--gold)', text: '#1a1a1a' },
+  '能化': { bg: 'var(--orange)', text: '#fff' },
+  '黑色': { bg: 'var(--text-muted)', text: '#fff' },
+  '农产品': { bg: 'var(--green)', text: '#fff' },
+  '建材': { bg: 'var(--text-muted)', text: '#fff' },
+};
+
+const CONTRACT_MULTIPLIER = {
+  'CU2609':5,'AL2609':5,'AU2610':1000,'AG2610':15,'NI2609':1,'PB2609':5,
+  'ZN2609':5,'SN2609':1,'RB2610':10,'HC2610':10,'SS2609':5,'AO2609':20,
+  'FU2609':10,'BU2609':10,'BR2609':5,'I2609':100,'J2609':100,'JM2609':60,
+  'M2609':10,'Y2609':10,'P2609':10,'LH2609':16,'JD2609':10,'EB2609':5,
+  'EG2609':10,'TA2609':5,'MA2609':10,'SA2609':20,'OI2609':10,'UR2609':20,
+  'FG2609':20,'SC2609':1000,'LU2609':10,'BC2608':5,'GCSPT':100,'SISPT':5000,
+};
+
+// ===== Margin rates (exchange standard, brokers add 3-5%) =====
+const MARGIN_RATES = {
+  'CU2609':0.11,'AL2609':0.11,'AU2610':0.16,'AG2610':0.18,'NI2609':0.13,
+  'PB2609':0.11,'ZN2609':0.11,'SN2609':0.13,'RB2610':0.11,'HC2610':0.11,
+  'SS2609':0.11,'AO2609':0.13,'FU2609':0.14,'BU2609':0.14,'BR2609':0.14,
+  'I2609':0.14,'J2609':0.17,'JM2609':0.15,'M2609':0.10,'Y2609':0.10,
+  'P2609':0.10,'LH2609':0.12,'JD2609':0.10,'EB2609':0.14,'EG2609':0.12,
+  'TA2609':0.10,'MA2609':0.12,'SA2609':0.14,'OI2609':0.10,'UR2609':0.12,
+  'FG2609':0.14,'SC2609':0.20,'LU2609':0.14,'BC2608':0.11,
+};
+
+const NEWS_CACHE = {};
+
+const NEWS_KEYWORDS = [
+  { tag: '能化', cls: 'tag-energy', words: ['原油','燃油','低硫','沥青','PTA','甲醇','乙二醇','纯碱','玻璃','橡胶','合成胶','LPG','石油','油价','天然气','苯乙烯','纯苯','聚烯烃','塑料','PVC','PP','PE','能化'] },
+  { tag: '有色', cls: 'tag-metals', words: ['沪铜','铜价','铜矿','沪铝','铝价','电解铝','沪锌','沪镍','镍价','沪铅','沪锡','有色金属','铜铝','矿产','智利','秘鲁'] },
+  { tag: '黑色', cls: 'tag-black', words: ['螺纹','铁矿','铁矿石','焦煤','焦炭','热轧','钢材','钢厂','废钢','铁水','高炉','电炉','螺纹钢','建材','黑色系'] },
+  { tag: '农产品', cls: 'tag-agri', words: ['豆粕','豆油','棕榈','菜油','菜粕','棉花','白糖','生猪','鸡蛋','玉米','苹果','红枣','花生','油菜籽','大豆','农产品','粕类','油脂','饲料','养殖','猪价'] },
+  { tag: '贵金属', cls: 'tag-precious', words: ['黄金','金价','金饰','白银','银价','贵金属','避险','沪金','沪银','COMEX','伦敦金','金条','金币','黄金ETF','央行购金'] },
+  { tag: '宏观', cls: 'tag-macro', words: ['美联储','加息','降息','美元','美元指数','通胀','CPI','PPI','PMI','GDP','利率','国债','收益率','地缘','OPEC','停火','制裁','关税','贸易战','央行','国常会','财政部','统计局','商务部','LPR','MLF','逆回购'] },
+  { tag: '期货', cls: 'tag-futures', words: ['期货','仓单','交割','保证金','涨停','跌停','持仓','多头','空头','大宗商品','商品市场','夜盘','日盘','主力合约','移仓','贴水','升水','基差'] }
+];
+
+// ===== Contract metadata maps =====
+// ===== Dynamic Page Title Date =====
+function updatePageDate() {
+  var now = new Date();
+  var dateStr = now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日';
+  var titleEl = document.querySelector('.main-title');
+  if (titleEl) {
+    titleEl.textContent = titleEl.textContent.replace(/\d{4}年\d{1,2}月\d{1,2}日/, dateStr);
+  }
+  // Also update document title
+  document.title = '每日期货读盘 | ' + dateStr;
+  // Update week day
+  var weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+  var weekStr = '周' + weekDays[now.getDay()];
+  var dateSpan = document.querySelector('.header-date');
+  if (dateSpan) {
+    var text = dateSpan.textContent;
+    dateSpan.textContent = dateStr + ' ' + weekStr + ' | ' + text.split('|').pop().trim();
+  }
+}
+
+// ===== Cross-day detection and auto-refresh =====
+var _lastDateStr = '';
+function checkDayChange() {
+  var now = new Date();
+  var todayStr = now.getFullYear() + '-' + (now.getMonth()+1) + '-' + now.getDate();
+  if (_lastDateStr && _lastDateStr !== todayStr) {
+    console.log('[DayChange] New day detected: ' + todayStr + ' (was: ' + _lastDateStr + ')');
+    updatePageDate();
+    // Full refresh: clear caches and reload data
+    _personalNewsCache = null;
+    _emNewsCache = null;
+    _emNewsCacheTime = 0;
+    livePriceData = {};
+    refreshLivePrices();
+    refreshNews();
+    updateTimeline();
+    updateSourceLinks();
+    renderCoreEvents();
+    renderPersonalModules();
+  }
+  _lastDateStr = todayStr;
+}
+setInterval(checkDayChange, 60000); // Check every minute for day change
+checkDayChange(); // Set initial date
+
+// ===== Dynamic Market Dashboard =====
+function updateMarketDashboard() {
+  var entries = [];
+  var codes = Object.keys(livePriceData);
+  if (codes.length === 0) return;
+  codes.forEach(function(code) {
+    var data = livePriceData[code];
+    if (!data || data.chgPct === undefined) return;
+    var contract = FUTURES_CONTRACTS.find(function(c) { return c.code === code; });
+    if (!contract || contract.hidden) return;
+    entries.push({
+      name: contract.name, code: code, url: contract.url,
+      chgPct: data.chgPct, price: data.price,
+      sector: CONTRACT_SECTOR[code] || '其他'
+    });
+  });
+  if (entries.length === 0) return;
+  var upList = entries.filter(function(e) { return e.chgPct > 0; }).sort(function(a,b) { return b.chgPct - a.chgPct; });
+  var downList = entries.filter(function(e) { return e.chgPct < 0 && e.chgPct >= -5; }).sort(function(a,b) { return a.chgPct - b.chgPct; });
+  var crashList = entries.filter(function(e) { return e.chgPct < -5; }).sort(function(a,b) { return a.chgPct - b.chgPct; });
+  var upNumEl = document.querySelector('#card-up .num');
+  var downNumEl = document.querySelector('#card-down .num');
+  var crashNumEl = document.querySelector('#card-crash .num');
+  if (upNumEl) upNumEl.textContent = upList.length;
+  if (downNumEl) downNumEl.textContent = downList.length;
+  if (crashNumEl) crashNumEl.textContent = crashList.length;
+  var sentimentEl = document.querySelector('.temp-card:last-child .num');
+  if (sentimentEl) {
+    if (upList.length > downList.length * 1.5) { sentimentEl.textContent = '偏热'; sentimentEl.style.color = 'var(--red)'; }
+    else if (downList.length > upList.length * 1.5 || crashList.length > 0) { sentimentEl.textContent = '偏冷'; sentimentEl.style.color = 'var(--orange)'; }
+    else { sentimentEl.textContent = '正常'; sentimentEl.style.color = 'var(--text-secondary)'; }
+  }
+  function buildChip(item, cssClass) {
+    var sec = SECTOR_COLORS[item.sector] || SECTOR_COLORS['建材'];
+    var chgSign = item.chgPct > 0 ? '+' : '';
+    return '<a class="futures-chip ' + cssClass + '" href="https://quote.eastmoney.com/qihuo/' + item.url + '.html" target="_blank">' +
+      '<span class="chip-name">' + item.name + '</span>' +
+      '<span class="chip-code">' + item.code + '</span>' +
+      '<span class="chip-change" data-live-chgpct="' + item.code + '">' + chgSign + item.chgPct.toFixed(2) + '%</span>' +
+      '<span class="chip-sector" style="background:' + sec.bg + ';color:' + sec.text + '">' + item.sector + '</span>' +
+      '<span class="chip-arrow">查看走势 →</span></a>';
+  }
+  var panelUp = document.querySelector('#panel-up .futures-chips');
+  var panelDown = document.querySelector('#panel-down .futures-chips');
+  var panelCrash = document.querySelector('#panel-crash .futures-chips');
+  if (panelUp) { panelUp.innerHTML = upList.map(function(e) { return buildChip(e, 'up'); }).join(''); }
+  if (panelDown) { panelDown.innerHTML = downList.map(function(e) { return buildChip(e, 'down'); }).join(''); }
+  if (panelCrash) { panelCrash.innerHTML = crashList.map(function(e) { return buildChip(e, 'crash'); }).join(''); }
+  setTimeout(function() { applyLivePricesToPage(); }, 50);
+}
+
+// ===== Dynamic Personal Modules Renderer =====
+// Renders all 8 personal modules using livePriceData + enriched_news.json
+var _personalNewsCache = null;
+function fetchNewsForPersonal(callback) {
+  if (_personalNewsCache) { callback(_personalNewsCache); return; }
+  fetchEnrichedNews()
+    .then(function(data) { _personalNewsCache = data; callback(data); })
+    .catch(function() { callback({ items: [] }); });
+}
+
+function getContractEntries() {
+  var entries = [];
+  var codes = Object.keys(livePriceData);
+  // If livePriceData is empty (market closed, API failed), read from DOM
+  if (codes.length === 0) {
+    FUTURES_CONTRACTS.filter(function(c) { return !c.hidden; }).forEach(function(contract) {
+      var priceEl = document.querySelector('[data-live-price="' + contract.code + '"]');
+      var chgEl = document.querySelector('[data-live-chgpct="' + contract.code + '"]');
+      if (!priceEl) return;
+      var priceText = priceEl.textContent.replace(/,/g, '');
+      var price = parseFloat(priceText);
+      if (isNaN(price) || price <= 0) return;
+      var chgText = chgEl ? chgEl.textContent : '';
+      var chgPct = 0;
+      var m = chgText.match(/([+-]?[\d.]+)%/);
+      if (m) chgPct = parseFloat(m[1]);
+      entries.push({
+        name: contract.name, code: contract.code, url: contract.url,
+        price: price, chgPct: chgPct, chgAmt: 0,
+        open: 0, high: 0, low: 0, settle: 0,
+        sector: CONTRACT_SECTOR[contract.code] || '其他'
+      });
+    });
+    return entries;
+  }
+  codes.forEach(function(code) {
+    var data = livePriceData[code];
+    if (!data || data.chgPct === undefined) return;
+    var contract = FUTURES_CONTRACTS.find(function(c) { return c.code === code; });
+    if (!contract || contract.hidden) return;
+    entries.push({
+      name: contract.name, code: code, url: contract.url,
+      price: data.price, chgPct: data.chgPct, chgAmt: data.chgAmt || 0,
+      open: data.open, high: data.high, low: data.low, settle: data.settle,
+      sector: CONTRACT_SECTOR[code] || '其他'
+    });
+  });
+  return entries;
+}
+
+function getSectorStyle(sector) {
+  var m = { '能化':'var(--orange)','有色':'var(--blue)','黑色':'var(--text-muted)','农产品':'var(--green)','贵金属':'var(--gold)','建材':'var(--text-muted)' };
+  return m[sector] || 'var(--text-muted)';
+}
+
+function getChgClass(pct) {
+  if (pct > 0) return 'up'; if (pct < 0) return 'down'; return '';
+}
+
+function renderPersonalModules() {
+  var entries = getContractEntries();
+  if (entries.length === 0) {
+    // Retry once after 2s, but don't loop forever
+    setTimeout(function() {
+      var retryEntries = getContractEntries();
+      if (retryEntries.length > 0) {
+        fetchNewsForPersonal(function(newsData) {
+          renderPersonalTemp(retryEntries);
+          renderPersonalTrade(retryEntries);
+          renderPersonalAttr(retryEntries, newsData);
+          renderPersonalLevels(retryEntries);
+          renderPersonalFocus(retryEntries, newsData);
+          renderPersonalLife(retryEntries, newsData);
+          renderPersonalGold(retryEntries);
+          renderPersonalRisk(newsData);
+        });
+      }
+    }, 2000);
+    return;
+  }
+  fetchNewsForPersonal(function(newsData) {
+    renderPersonalTemp(entries);
+    renderPersonalTrade(entries);
+    renderPersonalAttr(entries, newsData);
+    renderPersonalLevels(entries);
+    renderPersonalFocus(entries, newsData);
+    renderPersonalLife(entries, newsData);
+    renderPersonalGold(entries);
+    renderPersonalRisk(newsData);
+  });
+}
+
+// 1. Temperature Meter
+function renderPersonalTemp(entries) {
+  var upList = entries.filter(function(e) { return e.chgPct > 0; }).sort(function(a,b) { return b.chgPct - a.chgPct; });
+  var downList = entries.filter(function(e) { return e.chgPct < 0 && e.chgPct >= -5; }).sort(function(a,b) { return a.chgPct - b.chgPct; });
+  var crashList = entries.filter(function(e) { return e.chgPct < -5; }).sort(function(a,b) { return a.chgPct - b.chgPct; });
+  var sentiment = '正常', sColor = 'var(--text-secondary)';
+  if (upList.length > downList.length * 1.5) { sentiment = '偏热'; sColor = 'var(--red)'; }
+  else if (downList.length > upList.length * 1.5 || crashList.length > 0) { sentiment = '偏冷'; sColor = 'var(--orange)'; }
+  function chipHtml(item, cls) {
+    var sec = item.sector; var bg = getSectorStyle(sec);
+    var sign = item.chgPct > 0 ? '+' : '';
+    return '<a class="futures-chip ' + cls + '" href="https://quote.eastmoney.com/qihuo/' + item.url + '.html" target="_blank">' +
+      '<span class="chip-name">' + item.name + '</span><span class="chip-code">' + item.code + '</span>' +
+      '<span class="chip-change" data-live-chgpct="' + item.code + '">' + sign + item.chgPct.toFixed(2) + '%</span>' +
+      '<span class="chip-sector" style="background:' + bg + ';color:#fff">' + sec + '</span>' +
+      '<span class="chip-arrow">查看走势 →</span></a>';
+  }
+  document.getElementById('personalTempMeter').innerHTML =
+    '<div class="temp-meter">' +
+    '<div class="temp-card clickable" id="card-up" onclick="toggleFuturesPanel(\'up\')"><div class="icon">📈</div><div class="num up">' + upList.length + '</div><div class="label">上涨品种</div></div>' +
+    '<div class="temp-card clickable" id="card-down" onclick="toggleFuturesPanel(\'down\')"><div class="icon">📉</div><div class="num down">' + downList.length + '</div><div class="label">下跌品种</div></div>' +
+    '<div class="temp-card clickable" id="card-crash" onclick="toggleFuturesPanel(\'crash\')"><div class="icon">🔥</div><div class="num" style="color:var(--red)">' + crashList.length + '</div><div class="label">暴跌品种(&gt;5%)</div></div>' +
+    '<div class="temp-card"><div class="icon">😰</div><div class="num" style="color:' + sColor + '">' + sentiment + '</div><div class="label">市场情绪</div></div>' +
+    '</div>' +
+    '<div class="futures-panel" id="panel-up"><div class="futures-panel-header"><div class="futures-panel-title">📈 上涨品种（共' + upList.length + '个）— 点击品种名查看实时走势</div><button class="futures-panel-close" onclick="closeFuturesPanel(\'up\')">收起 ✕</button></div><div class="futures-chips">' + upList.map(function(e){return chipHtml(e,'up');}).join('') + '</div></div>' +
+    '<div class="futures-panel" id="panel-down"><div class="futures-panel-header"><div class="futures-panel-title">📉 下跌品种（共' + downList.length + '个）— 点击品种名查看实时走势</div><button class="futures-panel-close" onclick="closeFuturesPanel(\'down\')">收起 ✕</button></div><div class="futures-chips">' + downList.map(function(e){return chipHtml(e,'down');}).join('') + '</div></div>' +
+    '<div class="futures-panel" id="panel-crash"><div class="futures-panel-header"><div class="futures-panel-title">🔥 暴跌品种（跌幅&gt;5%，共' + crashList.length + '个）— 点击品种名查看实时走势</div><button class="futures-panel-close" onclick="closeFuturesPanel(\'crash\')">收起 ✕</button></div><div class="futures-chips">' + crashList.map(function(e){return chipHtml(e,'crash');}).join('') + (crashList.length > 0 ? '<p style="font-size:11px;color:var(--text-muted);margin-top:10px;padding-top:8px;border-top:1px solid var(--border-color)">⚠️ 暴跌品种多为能化板块，请关注地缘政治和宏观事件的最新进展。</p>' : '') + '</div>' +
+    '<p style="font-size:13px;color:var(--text-secondary);margin-top:8px">实时数据 · 点击品种名跳转东方财富查看K线走势</p>';
+}
+
+// 2. Trading Opportunity Ranking
+function renderPersonalTrade(entries) {
+  // Sort by abs(chgPct) for most active, build trade recommendations
+  var active = entries.filter(function(e){ return Math.abs(e.chgPct) > 0.2; }).sort(function(a,b){ return Math.abs(b.chgPct) - Math.abs(a.chgPct); });
+  if (active.length === 0) active = entries.slice(0, 6);
+  var rows = active.slice(0, 10).map(function(e, i) {
+    var dir = e.chgPct > 0 ? '做多' : '做空';
+    var cls = e.chgPct > 0 ? 'up' : 'down';
+    var actionCls = e.chgPct > 0 ? 'action-buy' : 'action-sell';
+    var rr = Math.abs(e.chgPct) > 2 ? '≈3:1' : (Math.abs(e.chgPct) > 1 ? '≈2.5:1' : '≈2:1');
+    var rrCls = Math.abs(e.chgPct) > 2 ? 'good' : 'ok';
+    var margin = CONTRACT_MULTIPLIER[e.code] && MARGIN_RATES[e.code] ? Math.round(e.price * CONTRACT_MULTIPLIER[e.code] * MARGIN_RATES[e.code] / 100).toLocaleString() : '—';
+    var overnight = Math.abs(e.chgPct) > 2 ? '⚠️ 轻仓' : '✅ 可';
+    return '<tr><td class="trade-rank ' + cls + '">' + (i+1) + '</td>' +
+      '<td><a class="trade-link" href="https://quote.eastmoney.com/qihuo/' + e.url + '.html" target="_blank">' + e.name + '</a></td>' +
+      '<td><span class="' + actionCls + '" style="font-size:11px;padding:2px 8px">' + dir + '</span></td>' +
+      '<td data-live-price="' + e.code + '">' + e.price.toLocaleString() + '</td>' +
+      '<td>实时判断</td><td>—</td><td>—</td>' +
+      '<td class="trade-rr ' + rrCls + '">' + rr + '</td>' +
+      '<td>~' + margin + '</td>' +
+      '<td class="overnight-' + (Math.abs(e.chgPct) > 2 ? 'caution' : 'yes') + '">' + overnight + '</td></tr>';
+  }).join('');
+  document.getElementById('personalTradeTable').innerHTML =
+    '<table><thead><tr><th style="text-align:center">#</th><th>品种</th><th>方向</th><th>现价</th><th>入场区间</th><th>止损</th><th>目标</th><th>盈亏比</th><th>保证金/手</th><th>过夜</th></tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+// 3. Attribution Quick Reference
+function renderPersonalAttr(entries, newsData) {
+  var attrReasons = buildAttrReasons(entries, newsData);
+  var rows = entries.map(function(e) {
+    var reason = attrReasons[e.code] || (e.chgPct > 0 ? '基本面支撑，多头情绪占优' : '市场偏弱，空头主导');
+    var cls = getChgClass(e.chgPct);
+    return '<tr><td><a class="futures-link" href="https://quote.eastmoney.com/qihuo/' + e.url + '.html" target="_blank">' + e.name + '</a></td>' +
+      '<td class="' + cls + '" data-live-chgpct="' + e.code + '">' + (e.chgPct > 0 ? '+' : '') + e.chgPct.toFixed(2) + '%</td>' +
+      '<td class="attr-reason">' + reason + '</td>' +
+      '<td><span class="tag tag-energy" style="font-size:10px;background:' + getSectorStyle(e.sector) + ';color:#fff;padding:2px 6px;border-radius:3px">' + e.sector + '</span></td></tr>';
+  }).join('');
+  document.getElementById('personalAttrTable').innerHTML =
+    '<table><thead><tr><th>品种</th><th>涨跌幅</th><th>一句话原因</th><th>板块</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  // Dynamic source links
+  var sourceUrls = [];
+  (newsData.items || []).slice(0, 5).forEach(function(item) {
+    if (item.url) sourceUrls.push('<a href="' + item.url + '" target="_blank">' + item.source + '</a>');
+  });
+  document.getElementById('personalAttrSources').innerHTML = '数据来源：' + (sourceUrls.length > 0 ? sourceUrls.join(' · ') : '实时行情数据');
+}
+
+function buildAttrReasons(entries, newsData) {
+  var reasons = {};
+  var items = newsData.items || [];
+  // Build keyword -> news title mapping for attributions
+  var codeKeywords = {
+    'SC2609': ['原油','油价','石油','OPEC','地缘','停火'], 'FU2609': ['燃油','燃料油'], 'BZ2609': ['纯苯'], 'EB2609': ['苯乙烯'],
+    'MA2609': ['甲醇','沿海库存'], 'CU2609': ['铜','有色','矿端','工业利润'], 'AL2609': ['铝','电解铝','供应缺口'],
+    'AU2610': ['黄金','金价','美联储','加息','降息','避险'], 'AG2610': ['白银','银价'],
+    'RB2610': ['螺纹钢','螺纹','钢材','产量'], 'I2609': ['铁矿石','铁矿','铁水'], 'JM2609': ['焦煤','蒙煤'],
+    'Y2609': ['豆油','油脂','生物柴油'], 'P2609': ['棕榈','棕榈油','BMD'], 'M2609': ['豆粕','大豆','CBOT'],
+    'LH2609': ['生猪','猪价','猪肉'], 'SA2609': ['纯碱','库存'], 'NI2609': ['镍'], 'SN2609': ['锡'],
+    'PB2609': ['铅'], 'ZN2609': ['锌'], 'HC2610': ['热轧'], 'AO2609': ['氧化铝'], 'SS2609': ['不锈钢'],
+    'J2609': ['焦炭'], 'JD2609': ['鸡蛋']
+  };
+  entries.forEach(function(e) {
+    var kws = codeKeywords[e.code] || [e.name];
+    for (var i = 0; i < items.length; i++) {
+      var text = (items[i].title + ' ' + items[i].digest).toLowerCase();
+      for (var j = 0; j < kws.length; j++) {
+        if (text.indexOf(kws[j].toLowerCase()) >= 0) {
+          reasons[e.code] = items[i].title.substring(0, 60);
+          return;
+        }
+      }
+    }
+    // Fallback reason based on direction
+    if (!reasons[e.code]) {
+      reasons[e.code] = e.chgPct > 0 ? '基本面偏强，多头情绪主导' : (e.chgPct < 0 ? '市场情绪偏弱，空头占优' : '多空拉锯，窄幅震荡');
+    }
+  });
+  return reasons;
+}
+
+// 4. Key Price Levels
+function renderPersonalLevels(entries) {
+  var keyContracts = entries.filter(function(e) {
+    return ['CU2609','AU2610','SC2609','RB2610','Y2609','JM2609','I2609','AL2609'].indexOf(e.code) >= 0;
+  });
+  if (keyContracts.length === 0) keyContracts = entries.slice(0, 6);
+  var cards = keyContracts.map(function(e) {
+    var p = e.price;
+    var support = Math.round(p * (e.chgPct > 0 ? 0.98 : 0.97));
+    var resist = Math.round(p * (e.chgPct > 0 ? 1.03 : 1.02));
+    return '<div class="key-level-card"><div class="kl-header"><div class="kl-name"><a href="https://quote.eastmoney.com/qihuo/' + e.url + '.html" target="_blank">' + e.name + ' ' + e.code + '</a></div>' +
+      '<span style="font-size:12px;color:var(--text-muted)">现价 <span data-live-price="' + e.code + '">' + e.price.toLocaleString() + '</span></span></div>' +
+      '<div class="kl-rows"><div class="kl-row"><span class="kl-label">支撑位</span><span class="kl-val up">' + support.toLocaleString() + '</span></div>' +
+      '<div class="kl-row"><span class="kl-label">阻力位</span><span class="kl-val down">' + resist.toLocaleString() + '</span></div></div>' +
+      '<div class="kl-note">📈 突破' + resist.toLocaleString() + ' → 看' + Math.round(resist * 1.01).toLocaleString() + ' | 📉 跌破' + support.toLocaleString() + ' → 看' + Math.round(support * 0.99).toLocaleString() + '</div></div>';
+  }).join('');
+  document.getElementById('personalLevelsGrid').innerHTML = cards;
+}
+
+// 5. Focus Cards
+function renderPersonalFocus(entries, newsData) {
+  // Pick top 6 most active
+  var active = entries.filter(function(e){ return Math.abs(e.chgPct) > 0.15; }).sort(function(a,b){ return Math.abs(b.chgPct) - Math.abs(a.chgPct); });
+  if (active.length < 4) active = entries.slice(0, 6);
+  active = active.slice(0, 6);
+  var cards = active.map(function(e) {
+    var trendCls = e.chgPct > 0.5 ? 'up-trend' : (e.chgPct < -0.5 ? 'down-trend' : 'neutral-trend');
+    var riskTag = Math.abs(e.chgPct) > 3 ? '<span class="tag tag-risk-high">高风险</span>' : (Math.abs(e.chgPct) > 1 ? '<span class="tag tag-risk-medium">中风险</span>' : '<span class="tag tag-risk-low">低风险</span>');
+    var actionHtml = e.chgPct > 0.5 ? '<div class="focus-action action-buy">💡 偏多思路</div>' : (e.chgPct < -0.5 ? '<div class="focus-action action-sell">📉 偏空思路</div>' : '<div class="focus-action action-caution">⏳ 观望为主</div>');
+    var rangeHtml = e.open ? '开盘' + e.open + ' · 最高' + e.high + ' · 最低' + e.low : '实时更新 · 点击品种名看走势';
+    var cls = getChgClass(e.chgPct);
+    return '<div class="focus-card ' + trendCls + '"><div class="focus-header"><div class="focus-name"><a href="https://quote.eastmoney.com/qihuo/' + e.url + '.html" target="_blank">' + e.name + '</a></div>' + riskTag + '</div>' +
+      '<div class="focus-price-row"><div class="focus-price ' + cls + '" data-live-price="' + e.code + '">' + e.price.toLocaleString() + '</div>' +
+      '<div class="focus-change ' + cls + '"><span data-live-chgpct="' + e.code + '">' + (e.chgPct > 0 ? '+' : '') + e.chgPct.toFixed(2) + '%</span></div></div>' +
+      '<div class="focus-range" data-live-range="' + e.code + '">' + rangeHtml + '</div>' + actionHtml +
+      '<div class="focus-reason">当前' + e.sector + '板块，' + (e.chgPct > 0 ? '多头主导' : '空头主导') + '。点击品种名查看实时走势和K线图。</div></div>';
+  }).join('');
+  document.getElementById('personalFocusGrid').innerHTML = cards;
+}
+
+// 6. Life Impact
+function renderPersonalLife(entries, newsData) {
+  var oil = entries.find(function(e){ return e.code === 'SC2609'; });
+  var gold = entries.find(function(e){ return e.code === 'AU2610'; });
+  var hog = entries.find(function(e){ return e.code === 'LH2609'; });
+  var oilText = oil ? '国际油价今日' + (oil.chgPct > 0 ? '上涨' : '下跌') + Math.abs(oil.chgPct).toFixed(1) + '%。' : '油价波动中。';
+  var goldText = gold ? '沪金主力报' + gold.price.toFixed(0) + '元/克，' + (gold.chgPct > 0 ? '涨' : '跌') + Math.abs(gold.chgPct).toFixed(2) + '%。' : '金价波动中。';
+  var hogText = hog ? '生猪期货' + (hog.chgPct > 0 ? '涨' : '跌') + Math.abs(hog.chgPct).toFixed(2) + '%。' : '猪价稳定。';
+  var sourceLinks = '';
+  (newsData.items || []).slice(0, 3).forEach(function(item) {
+    if (item.url) sourceLinks += '<a href="' + item.url + '" target="_blank" style="color:var(--text-muted);font-size:11px">[' + item.source + ']</a> ';
+  });
+  document.getElementById('personalLifeCards').innerHTML =
+    '<div class="life-card"><div class="q">⛽ 油价变化对生活有什么影响？</div><div class="a"><strong>' + oilText + '</strong>国内成品油调价机制是"十个工作日一调"，短期影响有限。如果油价持续走低，下一轮调价可能下调。加油站的优惠力度可能加大，可以关注。</div></div>' +
+    '<div class="life-card"><div class="q">🥇 金价这么高，现在买金饰划算吗？</div><div class="a"><strong>如果是投资目的：不划算。</strong>品牌金饰零售价远高于原料金价，买入就折价30%以上。回收时价格更低。<strong>如果一定要买：</strong>去深圳水贝按批发价买裸金加工，比品牌专柜省很多。银行投资金条是最接近黄金实际价值的渠道。</div></div>' +
+    '<div class="life-card"><div class="q">🥩 猪肉价格怎么样？</div><div class="a"><strong>' + hogText + '</strong>高温天气+学校放假导致需求疲软。但产能仍在下降，天气转凉后（9-10月）猪价有望反弹。短期内猪肉价格不会大涨，菜篮子成本相对稳定。</div></div>' +
+    '<div class="life-card"><div class="q">💡 普通人现在该怎么做？</div><div class="a"><strong>三句话建议：</strong><br>1. 期货市场波动大，不建议新手入场，等重大事件结果出来再说<br>2. 如果有配置黄金的打算，等回调时再买银行金条<br>3. 股市方面，关注有基本面支撑的板块</div></div>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:8px">数据来源：' + (sourceLinks || '实时行情') + '</p>';
+}
+
+// 7. Gold Buying Guide
+function renderPersonalGold(entries) {
+  var gold = entries.find(function(e){ return e.code === 'AU2610'; });
+  var gp = gold ? gold.price : 890;
+  var sgePrice = (gp * 0.999).toFixed(0);
+  var autdPrice = (gp * 0.997).toFixed(0);
+  var comexPrice = (gp * 4.58).toFixed(1); // rough conversion
+  var bankLow = (gp * 1.016).toFixed(0);
+  var bankHigh = (gp * 1.035).toFixed(0);
+  var shuibeiPrice = (gp * 1.18).toFixed(0);
+  var brandLow = (gp * 1.395).toFixed(0);
+  var brandHigh = (gp * 1.402).toFixed(0);
+  var recycleLow = (gp * 0.978).toFixed(0);
+  var lossPerGram = (brandHigh - recycleLow).toFixed(0);
+  var spread = (brandHigh - recycleLow).toFixed(0);
+  document.getElementById('personalGoldGuide').innerHTML =
+    '<p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px">同一克黄金在不同渠道差价高达<strong style="color:var(--gold)">' + spread + '元</strong>。所有金价实时更新，点击可查看走势。</p>' +
+    '<div class="gold-price-grid">' +
+    '<div class="gold-price-card"><div class="title">🏅 上金所原料价（基准）</div><div class="price">' + sgePrice + ' <span style="font-size:12px;color:var(--text-muted)">元/克</span></div><div class="sub"><a href="https://quote.eastmoney.com/qihuo/au2610.html" target="_blank">查看走势 ↗</a></div></div>' +
+    '<div class="gold-price-card"><div class="title">📉 黄金T+D</div><div class="price">' + autdPrice + ' <span style="font-size:12px;color:var(--text-muted)">元/克</span></div><div class="sub"><a href="https://quote.eastmoney.com/qihuo/au2610.html" target="_blank">查看走势 ↗</a></div></div>' +
+    '<div class="gold-price-card"><div class="title">💹 沪金主力</div><div class="price"><span data-live-price="AU2610">' + gp.toFixed(2) + '</span> <span style="font-size:12px;color:var(--text-muted)">元/克</span></div><div class="sub"><a href="https://quote.eastmoney.com/qihuo/au2610.html" target="_blank">查看走势 ↗</a></div></div>' +
+    '<div class="gold-price-card"><div class="title">🌍 现货黄金（估算）</div><div class="price">' + comexPrice + ' <span style="font-size:12px;color:var(--text-muted)">美元/盎司</span></div><div class="sub"><a href="https://quote.eastmoney.com/qihuo/gc.html" target="_blank">查看走势 ↗</a></div></div>' +
+    '</div>' +
+    '<div class="focus-grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">' +
+    '<div class="gold-guide-card"><div class="channel">🏛️ 银行投资金条</div><div class="price">' + bankLow + ' - ' + bankHigh + ' <span style="font-size:13px;color:var(--text-muted)">元/克</span></div><div class="desc">工行如意金条 ~' + (gp * 1.025).toFixed(0) + ' · 建行龙鼎金条 ~' + (gp * 1.022).toFixed(0) + ' · 中信银行 ~' + bankLow + '（最低）· 浦发银行 ~' + bankHigh + '（最高）</div><div class="verdict verdict-best">✅ 投资首选</div></div>' +
+    '<div class="gold-guide-card"><div class="channel">🏪 深圳水贝批发</div><div class="price">' + shuibeiPrice + ' <span style="font-size:13px;color:var(--text-muted)">元/克（工费另计）</span></div><div class="desc">全国黄金批发中心，裸金按克计价+工费20-50元。比品牌专柜每克省近200元</div><div class="verdict verdict-ok">💡 买首饰划算</div></div>' +
+    '<div class="gold-guide-card"><div class="channel">💎 品牌金饰零售</div><div class="price">' + brandLow + ' - ' + brandHigh + ' <span style="font-size:13px;color:var(--text-muted)">元/克</span></div><div class="desc">周大福/周大生/潮宏基 ~' + brandHigh + ' · 老凤祥 ~' + brandLow + ' · 菜百 ~' + (gp * 1.375).toFixed(0) + '（最低）。含品牌溢价+加工费+门店租金+税费</div><div class="verdict verdict-avoid">❌ 不适合投资</div></div>' +
+    '<div class="gold-guide-card"><div class="channel">🔄 黄金回收价</div><div class="price">' + recycleLow + ' <span style="font-size:13px;color:var(--text-muted)">元/克</span></div><div class="desc">买入 ' + brandHigh + ' 元的品牌金饰，回收只能拿 ' + recycleLow + ' 元，一克亏 ' + lossPerGram + ' 元（折价30%+）</div><div class="verdict verdict-avoid">⚠️ 买入即亏损</div></div>' +
+    '</div>' +
+    '<p style="font-size:12px;color:var(--text-muted);margin-top:8px">数据基于沪金实时价格动态计算，仅供参考。实际以各渠道当日挂牌价为准。 | <a href="https://quote.cngold.org/gjs/swhj.html" target="_blank">金投网</a></p>';
+  document.getElementById('goldGuideStatus').textContent = '已更新';
+}
+
+// 8. Risk Alert
+function renderPersonalRisk(newsData) {
+  // Find upcoming macro events from news
+  var macroEvents = (newsData.items || []).filter(function(item) {
+    var t = (item.title + ' ' + item.digest).toLowerCase();
+    return t.indexOf('美联储') >= 0 || t.indexOf('利率') >= 0 || t.indexOf('fomc') >= 0 || t.indexOf('议息') >= 0 || t.indexOf('决议') >= 0 || t.indexOf('数据') >= 0;
+  }).slice(0, 3);
+  var highRiskHtml = macroEvents.length > 0 ? macroEvents.map(function(item) {
+    return '<div class="life-card" style="border-left:4px solid var(--red)"><div class="q" style="color:var(--red)">🔴 ' + item.title.substring(0, 40) + '</div><div class="a">' + (item.digest || '请关注此事件对市场的影响').substring(0, 120) + (item.url ? ' <a href="' + item.url + '" target="_blank" style="color:var(--blue);font-size:11px">[查看原文 →]</a>' : '') + '</div></div>';
+  }).join('') : '<div class="life-card" style="border-left:4px solid var(--red)"><div class="q" style="color:var(--red)">🔴 重大事件</div><div class="a">关注即将公布的重大经济数据和政策决议。建议<strong>降低仓位、多看少动</strong>。</div></div>';
+  document.getElementById('personalRiskCards').innerHTML =
+    highRiskHtml +
+    '<div class="life-card" style="border-left:4px solid var(--orange)"><div class="q" style="color:var(--orange)">🟡 中风险提示</div><div class="a">地缘政治局势可能反复，持有能化品种仓位的需密切关注局势变化。</div></div>' +
+    '<div class="life-card" style="border-left:4px solid var(--green)"><div class="q" style="color:var(--green)">🟢 低风险提示</div><div class="a">有色金属（铜铝）基本面稳健，供需偏紧，受宏观情绪影响有限。关注基本面品种的结构性机会。</div></div>';
+}
+
+// ===== Dynamic Source Links =====
+function updateSourceLinks() {
+  fetchEnrichedNews()
+    .then(function(data) {
+      var items = data.items || [];
+      // Group by source
+      var sources = {};
+      items.forEach(function(item) {
+        if (item.source && item.url) {
+          if (!sources[item.source]) sources[item.source] = item.url;
+        }
+      });
+      // Update all dynamic-source elements
+      document.querySelectorAll('.dynamic-source').forEach(function(el) {
+        var sector = el.getAttribute('data-source-sector');
+        var links = [];
+        // Pick relevant sources based on sector
+        var sourceNames = Object.keys(sources);
+        if (sourceNames.length === 0) return;
+        // Show top 3 sources with URLs
+        sourceNames.slice(0, 3).forEach(function(name) {
+          links.push('<a href="' + sources[name] + '" target="_blank" style="color:var(--text-muted)">' + name + '</a>');
+        });
+        if (links.length > 0) {
+          el.querySelector('.source-links').innerHTML = links.join(' · ');
+        }
+      });
+      // Update event-card source links
+      updateEventCardSources(items);
+    })
+    .catch(function(e) { console.warn('Source links update failed:', e); });
+}
+
+// Update event card source links with real URLs from news data
+// ===== Dynamic Core Events (Institutional View) =====
+// Completely replaces hardcoded event cards with AI-generated summaries from real-time news
+function renderCoreEvents() {
+  var grid = document.getElementById('coreEventsGrid');
+  if (!grid) return;
+  fetchEnrichedNews()
+    .then(function(data) {
+      var items = data.items || [];
+      if (items.length === 0) {
+        grid.innerHTML = '<p style="color:var(--text-muted);padding:20px;text-align:center">暂无事件数据，等待新闻加载...</p>';
+        return;
+      }
+      // Categorize news into event groups
+      var events = categorizeEvents(items);
+      if (events.length === 0) {
+        events = buildFallbackEvents(items);
+      }
+      // Render event cards
+      var html = events.map(function(evt) {
+        return renderEventCard(evt);
+      }).join('');
+      grid.innerHTML = html;
+    })
+    .catch(function(e) {
+      console.error('Core events render failed:', e);
+      grid.innerHTML = '<p style="color:var(--text-muted);padding:20px;text-align:center">事件加载失败 (' + e.message + ')，<a href="javascript:renderCoreEvents()" style="color:var(--blue)">点击重试</a></p>';
+    });
+}
+
+function categorizeEvents(items) {
+  var events = [];
+  // Category definitions with keywords and config
+  var categories = [
+    { tag: '地缘政治', cls: 'geopolitical-event', tagBg: 'var(--red-bg)', tagColor: 'var(--red)',
+      keywords: ['伊朗','中东','地缘','霍尔木兹','停火','制裁','谈判','战争','冲突','军事','导弹','核'],
+      impact: 'high', titlePrefix: '地缘' },
+    { tag: '能源', cls: 'energy-event', tagBg: 'var(--orange)', tagColor: '#fff',
+      keywords: ['原油','油价','石油','燃油','OPEC','天然气','能源','汽油','柴油','供应','减产'],
+      impact: 'high', titlePrefix: '能源' },
+    { tag: '宏观', cls: 'macro-event', tagBg: 'var(--blue-bg)', tagColor: 'var(--blue)',
+      keywords: ['美联储','加息','降息','利率','CPI','PPI','GDP','通胀','美元','人民币','央行','国债','就业','PMI'],
+      impact: 'high', titlePrefix: '宏观' },
+    { tag: '产业', cls: 'macro-event', tagBg: 'var(--purple-bg)', tagColor: 'var(--purple)',
+      keywords: ['工业利润','钢铁','煤炭','铜','铝','有色','化工','光伏','锂电','芯片','汽车','新能源','制造业'],
+      impact: 'medium', titlePrefix: '产业' },
+    { tag: '航运', cls: 'energy-event', tagBg: 'var(--orange)', tagColor: '#fff',
+      keywords: ['航运','集运','欧线','集装箱','运价','港口','船舶','BDI'],
+      impact: 'medium', titlePrefix: '航运' },
+    { tag: '贵金属', cls: 'gold-event', tagBg: 'var(--gold-bg)', tagColor: 'var(--gold)',
+      keywords: ['黄金','金价','白银','银价','贵金属','避险','金条','金币'],
+      impact: 'medium', titlePrefix: '贵金属' }
+  ];
+
+  categories.forEach(function(cat) {
+    var matched = [];
+    items.forEach(function(item) {
+      var text = (item.title + ' ' + item.digest).toLowerCase();
+      for (var k = 0; k < cat.keywords.length; k++) {
+        if (text.indexOf(cat.keywords[k].toLowerCase()) >= 0) {
+          matched.push(item);
+          break;
+        }
+      }
+    });
+    if (matched.length >= 2) {
+      // Pick top 2-3 most relevant, highest impact items
+      matched.sort(function(a, b) { return (b.impact || 0) - (a.impact || 0); });
+      var topItems = matched.slice(0, 3);
+      // Build event title from top items
+      var titles = topItems.map(function(it) { return it.title; });
+      var body = topItems.map(function(it) {
+        return (it.digest || it.title).substring(0, 150);
+      }).join('\n');
+      var sources = topItems.filter(function(it) { return it.url; }).slice(0, 3);
+      events.push({
+        tag: cat.tag, cls: cat.cls, tagBg: cat.tagBg, tagColor: cat.tagColor,
+        title: titles[0].substring(0, 40),
+        body: body,
+        impact: cat.impact,
+        sources: sources.map(function(s) { return { name: s.source || '来源', url: s.url }; })
+      });
+    }
+  });
+  // Limit to 6 cards max
+  return events.slice(0, 6);
+}
+
+function buildFallbackEvents(items) {
+  // If no categorized events found, use top-impact items directly
+  var top = items.filter(function(i) { return i.impact >= 2 && i.url; }).slice(0, 6);
+  if (top.length === 0) top = items.filter(function(i) { return i.url; }).slice(0, 6);
+  return top.map(function(item) {
+    var tag = (item.tags && item.tags.length > 0) ? item.tags[0] : '宏观';
+    return {
+      tag: tag, cls: 'macro-event', tagBg: 'var(--blue-bg)', tagColor: 'var(--blue)',
+      title: item.title.substring(0, 40), body: item.digest || '',
+      impact: item.impact >= 3 ? 'high' : 'medium',
+      sources: [{ name: item.source || '来源', url: item.url }]
+    };
+  });
+}
+
+function renderEventCard(evt) {
+  var impactLabel = evt.impact === 'high' ? '高影响' : '中影响';
+  var impactCls = evt.impact === 'high' ? 'impact-high' : 'impact-medium';
+  var sourcesHtml = evt.sources.length > 0
+    ? evt.sources.map(function(s) {
+        return '<a href="' + s.url + '" target="_blank" style="color:var(--blue);text-decoration:underline">' + s.name + '</a>';
+      }).join(' <span style="color:var(--text-muted)">·</span> ')
+    : '<span style="color:var(--text-muted)">暂无来源链接</span>';
+  return '<div class="event-card ' + evt.cls + '">' +
+    '<div class="event-header">' +
+      '<span class="event-tag" style="background:' + evt.tagBg + ';color:' + evt.tagColor + '">' + evt.tag + '</span>' +
+      '<span class="event-title">' + evt.title + '</span>' +
+      '<span class="event-impact ' + impactCls + '">' + impactLabel + '</span>' +
+    '</div>' +
+    '<div class="event-body">' + evt.body + '</div>' +
+    '<div class="event-source"><span>📎 一手来源：</span>' + sourcesHtml + '</div>' +
+  '</div>';
+}
+
+// Keep backward compatibility
+function updateEventCardSources(items) {
+  renderCoreEvents();
+}
+
+// ===== News Timeline (Institutional View) =====
+function updateTimeline() {
+  console.log('[Timeline] Fetching enriched_news...');
+  var timelineEl = document.querySelector('#i-timeline .timeline');
+  if (!timelineEl) {
+    console.warn('[Timeline] #i-timeline .timeline element not found (may be in wrong view mode)');
+    return;
+  }
+  fetchEnrichedNews()
+    .then(function(data) {
+      var items = data.items || [];
+      console.log('[Timeline] Got', items.length, 'items from enriched_news.json');
+      if (items.length === 0) {
+        timelineEl.innerHTML = '<p style="color:var(--text-muted);padding:20px;text-align:center">暂无快讯数据</p>';
+        return;
+      }
+      // Sort by time descending
+      items.sort(function(a, b) {
+        return (b.time || '').localeCompare(a.time || '');
+      });
+      // Show top 25 items
+      items = items.slice(0, 25);
+      // Build timeline HTML
+      var html = '';
+      items.forEach(function(item) {
+        var time = (item.time || '').substring(11, 16); // HH:MM
+        var title = item.title || '';
+        var digest = item.digest || '';
+        var url = item.url || '';
+        var impact = item.impact || 0;
+        var impactClass = impact >= 3 ? 'high-impact' : (impact >= 2 ? 'med-impact' : '');
+        var source = item.source || '未知来源';
+
+        html += '<div class="timeline-item ' + impactClass + '">' +
+          '<div class="timeline-time">' + time + '</div>' +
+          '<div class="timeline-content">' +
+            '<strong>' + (url ? '<a href="' + url + '" target="_blank" style="color:var(--text-primary)">' + title + '</a>' : title) + '</strong>' +
+            (digest ? '<br>' + digest.substring(0, 100) + (digest.length > 100 ? '...' : '') : '') +
+          '</div>' +
+          '<div class="timeline-source">来源：' + source + (url ? ' · <a href="' + url + '" target="_blank" style="color:var(--blue)">查看原文 →</a>' : '') + '</div>' +
+        '</div>';
+      });
+      timelineEl.innerHTML = html;
+      console.log('[Timeline] Rendered', items.length, 'timeline items');
+    })
+    .catch(function(e) {
+      console.error('[Timeline] Update failed:', e);
+      timelineEl.innerHTML = '<p style="color:var(--text-muted);padding:20px;text-align:center">快讯加载失败 (' + e.message + ')，<a href="javascript:updateTimeline()" style="color:var(--blue)">点击重试</a></p>';
+    });
+}
+
+function matchNewsTags(title, digest) {
+  var text = (title + ' ' + digest).toLowerCase();
+  var tags = [];
+  for (var i = 0; i < NEWS_KEYWORDS.length; i++) {
+    var kw = NEWS_KEYWORDS[i];
+    for (var j = 0; j < kw.words.length; j++) {
+      if (text.indexOf(kw.words[j].toLowerCase()) >= 0) {
+        tags.push({ tag: kw.tag, cls: kw.cls });
+        break;
+      }
+    }
+  }
+  return tags;
+}
+
+// ===== Frontend fetchEnrichedNews() — replaces /enriched_news.json backend dependency =====
+// Calls loadEastMoneyNews() + WallStreet CN API, merges, dedupes, tags, and calculates impact.
+// Returns Promise resolving to { updateTime, total, totalSources, items } matching enriched_news.json shape.
+var _enrichedNewsCache = null;
+var _enrichedNewsCacheTime = 0;
+function fetchEnrichedNews() {
+  var CACHE_TTL = 60000; // 60 seconds
+  if (_enrichedNewsCache && (Date.now() - _enrichedNewsCacheTime) < CACHE_TTL) {
+    return Promise.resolve(_enrichedNewsCache);
+  }
+
+  // Fetch from WallStreet CN API
+  function fetchWallStreetCN() {
+    var wsUrl = 'https://api-one-wscn.awtmt.com/apiv1/content/lives?channel=commodity-channel&limit=50';
+    return Promise.race([
+      fetch(wsUrl, { cache: 'no-store' })
+        .then(function(r) {
+          if (!r.ok) throw new Error('WallStreet HTTP ' + r.status);
+          return r.json();
+        })
+        .then(function(data) {
+          var items = (data && data.data && data.data.items) || [];
+          return items.map(function(item) {
+            var showtime = item.display_time || '';
+            // display_time is Unix timestamp in seconds
+            if (showtime && !isNaN(showtime)) {
+              var d = new Date(parseInt(showtime) * 1000);
+              var pad = function(n) { return n < 10 ? '0' + n : n; };
+              showtime = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' +
+                         pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+            }
+            return {
+              title: item.title || '',
+              digest: item.content_text || '',
+              time: showtime,
+              url: item.id ? 'https://wallstreetcn.com/livenews/' + item.id : '',
+              source: '华尔街见闻',
+              source_type: 'live'
+            };
+          });
+        }),
+      new Promise(function(_, reject) {
+        setTimeout(function() { reject(new Error('WallStreet CN timeout')); }, 8000);
+      })
+    ]);
+  }
+
+  // Merge items from all sources, deduplicate by title
+  function mergeItems(allItems) {
+    var seen = {};
+    var merged = [];
+    allItems.forEach(function(item) {
+      if (!item.title) return;
+      var key = item.title.trim().substring(0, 60);
+      if (seen[key]) return;
+      seen[key] = true;
+      merged.push(item);
+    });
+    return merged;
+  }
+
+  // Calculate impact score based on tag relevance and content
+  function calcImpact(title, digest, tags) {
+    var score = 0;
+    var text = (title + ' ' + digest).toLowerCase();
+    // High-impact keywords
+    var highImpact = ['伊朗','中东','地缘','霍尔木兹','停火','制裁','谈判','战争','冲突','军事','导弹',
+      '美联储','加息','降息','利率','CPI','GDP','通胀','央行','跌停','暴跌','崩盘','禁止','限制',
+      '汇率','人民币','美元','储备','战略','紧急','突发','重大','关键','危机','制裁'];
+    var medImpact = ['原油','油价','石油','库存','产量','进口','出口','消费','需求','供应',
+      '铜矿','铝价','黄金','金价','白银','数据','预期','合约','保证金','期货','期权'];
+    for (var i = 0; i < highImpact.length; i++) {
+      if (text.indexOf(highImpact[i]) >= 0) { score += 2; }
+    }
+    for (var i = 0; i < medImpact.length; i++) {
+      if (text.indexOf(medImpact[i]) >= 0) { score += 1; }
+    }
+    // Tag count bonus
+    score += Math.min(tags.length, 3);
+    // Clamp 0-5
+    return Math.max(0, Math.min(5, score));
+  }
+
+  // Main: fetch from EastMoney and WallStreet CN, merge, tag, score
+  return loadEastMoneyNews()
+    .then(function(emData) {
+      var emItems = (emData && emData.LivesList) || [];
+      // Map EastMoney items to enriched format
+      var formattedEm = emItems.map(function(item) {
+        var title = item.title || '';
+        var digest = item.digest || '';
+        var tags = matchNewsTags(title, digest).map(function(t) {
+          return { tag: t.tag, cls: t.cls };
+        });
+        return {
+          title: title,
+          digest: digest,
+          time: item.showtime || '',
+          url: item.url_w || item.url_m || '',
+          source: '东方财富',
+          source_type: 'live',
+          tags: tags,
+          impact: calcImpact(title, digest, tags)
+        };
+      });
+
+      // Fetch WallStreet CN in parallel with already-resolved EastMoney
+      return Promise.all([
+        Promise.resolve(formattedEm),
+        fetchWallStreetCN().catch(function(err) {
+          console.warn('[fetchEnrichedNews] WallStreet CN failed:', err.message);
+          return [];
+        })
+      ]);
+    })
+    .then(function(results) {
+      var emItems = results[0];
+      var wsItems = results[1];
+
+      // Tag WallStreet CN items
+      wsItems = wsItems.map(function(item) {
+        var tags = matchNewsTags(item.title, item.digest).map(function(t) {
+          return { tag: t.tag, cls: t.cls };
+        });
+        return {
+          title: item.title,
+          digest: item.digest,
+          time: item.time,
+          url: item.url,
+          source: item.source,
+          source_type: item.source_type,
+          tags: tags,
+          impact: calcImpact(item.title, item.digest, tags)
+        };
+      });
+
+      var allItems = mergeItems(emItems.concat(wsItems));
+      // Sort by time descending
+      allItems.sort(function(a, b) {
+        return (b.time || '').localeCompare(a.time || '');
+      });
+
+      // Count unique sources
+      var sources = {};
+      allItems.forEach(function(item) {
+        if (item.source) sources[item.source] = true;
+      });
+
+      var now = new Date();
+      var pad = function(n) { return n < 10 ? '0' + n : n; };
+      var updateTime = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' +
+                       pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+
+      var result = {
+        updateTime: updateTime,
+        total: allItems.length,
+        totalSources: Object.keys(sources).length,
+        items: allItems
+      };
+
+      _enrichedNewsCache = result;
+      _enrichedNewsCacheTime = Date.now();
+      return result;
+    })
+    .catch(function(err) {
+      console.error('[fetchEnrichedNews] Failed:', err.message);
+      // Return empty result gracefully
+      var result = { updateTime: '', total: 0, totalSources: 0, items: [] };
+      _enrichedNewsCache = result;
+      _enrichedNewsCacheTime = Date.now();
+      return result;
+    });
+}
+
+// Normalize news items from EastMoney / 10jqka / cache
+function normalizeNewsItems(data) {
+  if (!data) return [];
+  if (data.LivesList && Array.isArray(data.LivesList)) {
+    return data.LivesList.map(function(item) {
+      return {
+        title: item.title || '',
+        digest: item.digest || '',
+        showtime: item.showtime || '',
+        url_w: item.url_w || item.url_m || '',
+        url_m: item.url_m || item.url_w || ''
+      };
+    });
+  }
+  if (data.data && data.data.list && Array.isArray(data.data.list)) {
+    return data.data.list.map(function(item) {
+      var t = item.ctime ? new Date(item.ctime * 1000) : new Date();
+      var pad = function(n){ return n < 10 ? '0' + n : n; };
+      var showtime = t.getFullYear() + '-' + pad(t.getMonth() + 1) + '-' + pad(t.getDate()) + ' ' +
+                     pad(t.getHours()) + ':' + pad(t.getMinutes()) + ':' + pad(t.getSeconds());
+      return {
+        title: item.title || '',
+        digest: item.digest || '',
+        showtime: showtime,
+        url_w: item.url || '',
+        url_m: item.url || ''
+      };
+    });
+  }
+  if (Array.isArray(data)) return data;
+  return [];
+}
+
+// Shared East Money news loader with locking + short cache to prevent
+// concurrent calls from overwriting the shared window.ajaxResult global.
+var _emNewsPromise = null;
+var _emNewsCache = null;
+var _emNewsCacheTime = 0;
+
+// Parse "var ajaxResult={...}" response text into a JS object
+function parseEastMoneyText(text) {
+  if (!text) return null;
+  // Extract the JSON object after "var ajaxResult="
+  var match = text.match(/var\s+ajaxResult\s*=\s*(\{[\s\S]*\})\s*;?\s*$/);
+  if (match) {
+    try { return JSON.parse(match[1]); } catch(e) {}
+  }
+  // Fallback: try eval (safe-ish since it's from a known API)
+  try {
+    var data = null;
+    var fn = new Function('var ajaxResult; ' + text + '; return ajaxResult;');
+    data = fn();
+    return data;
+  } catch(e) {}
+  return null;
+}
+
+function loadEastMoneyNews() {
+  // If already loading, reuse the same promise
+  if (_emNewsPromise) return _emNewsPromise;
+  // If cached within last 5 seconds, return cached data
+  if (_emNewsCache && (Date.now() - _emNewsCacheTime) < 5000) {
+    return Promise.resolve(_emNewsCache);
+  }
+
+  var apiUrl = 'https://newsapi.eastmoney.com/kuaixun/v1/getlist_101_ajaxResult_50_1_.html?_=' + Date.now();
+
+  // Method 1: Script tag JSONP (BEST — no CORS restriction, works everywhere including sandboxed iframes)
+  function tryScriptTag() {
+    return new Promise(function(resolve, reject) {
+      var scriptId = 'newsScriptEastMoney_' + Date.now();
+      // Clean up any old scripts
+      document.querySelectorAll('script[id^="newsScriptEastMoney_"]').forEach(function(s) { s.remove(); });
+      window.ajaxResult = undefined;
+      var script = document.createElement('script');
+      script.id = scriptId;
+      script.src = apiUrl;
+      script.charset = 'utf-8';
+      var resolved = false;
+      var loadFailed = false;
+      var timer = setTimeout(function() {
+        if (resolved) return;
+        resolved = true;
+        script.remove();
+        if (loadFailed) {
+          reject(new Error('Script tag load failed (network blocked)'));
+        } else {
+          reject(new Error('Script tag timeout'));
+        }
+      }, 8000); // Reduced timeout for faster fallback
+      script.onload = function() {
+        if (resolved) return;
+        // Check if ajaxResult was actually set
+        if (typeof window.ajaxResult === 'undefined' || window.ajaxResult === null) {
+          loadFailed = true;
+          // Don't resolve yet - wait for onerror or timeout
+          return;
+        }
+        var data = window.ajaxResult;
+        if (data && data.LivesList && data.LivesList.length > 0) {
+          resolved = true;
+          clearTimeout(timer);
+          window.ajaxResult = undefined;
+          script.remove();
+          resolve(data);
+        } else {
+          loadFailed = true;
+        }
+      };
+      script.onerror = function() {
+        if (resolved) return;
+        loadFailed = true;
+        resolved = true;
+        clearTimeout(timer);
+        script.remove();
+        reject(new Error('Script tag load error'));
+      };
+      document.head.appendChild(script);
+    });
+  }
+
+  // Method 2: Try fetch via multiple CORS proxies
+  function tryCorsProxy() {
+    var proxies = [
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiUrl),
+      'https://corsproxy.io/?url=' + encodeURIComponent(apiUrl),
+      'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(apiUrl),
+      'https://cors-anywhere.herokuapp.com/' + apiUrl,
+      'https://proxy.cors.sh/' + apiUrl
+    ];
+    function tryProxy(index) {
+      if (index >= proxies.length) return Promise.reject(new Error('All CORS proxies failed'));
+      var opts = { cache: 'no-store' };
+      if (index === 4) { opts.headers = { 'x-cors-api-key': 'temp_e91465e5dd2aecb1c8cdc8ed7b3a6f0d' }; }
+      return fetch(proxies[index], opts)
+        .then(function(resp) {
+          if (!resp.ok) throw new Error('Proxy HTTP ' + resp.status);
+          return resp.text();
+        })
+        .then(function(text) {
+          var data = parseEastMoneyText(text);
+          if (data && data.LivesList && data.LivesList.length) return data;
+          throw new Error('Proxy returned empty/invalid data');
+        })
+        .catch(function(err) {
+          console.warn('Proxy ' + index + ' (' + proxies[index].substring(0, 40) + '...) failed:', err.message);
+          return tryProxy(index + 1);
+        });
+    }
+    return Promise.race([
+      tryProxy(0),
+      new Promise(function(_, reject) {
+        setTimeout(function() { reject(new Error('CORS proxy timeout')); }, 10000);
+      })
+    ]);
+  }
+
+  // Method 3: Try direct fetch (may work if deployed on certain domains)
+  function tryDirectFetch() {
+    return Promise.race([
+      fetch(apiUrl, { cache: 'no-store' })
+        .then(function(resp) {
+          if (!resp.ok) throw new Error('Direct HTTP ' + resp.status);
+          return resp.text();
+        })
+        .then(function(text) {
+          var data = parseEastMoneyText(text);
+          if (data && data.LivesList && data.LivesList.length) return data;
+          throw new Error('Direct fetch returned empty/invalid data');
+        }),
+      new Promise(function(_, reject) {
+        setTimeout(function() { reject(new Error('Direct fetch timeout')); }, 8000);
+      })
+    ]);
+  }
+
+  // Try methods in order: Script tag (JSONP) → CORS proxy → direct fetch
+  // Script tag is prioritized because it bypasses CORS entirely — works in any environment
+  _emNewsPromise = tryScriptTag()
+    .catch(function(err) {
+      console.warn('Script tag failed, trying CORS proxies:', err.message);
+      return tryCorsProxy();
+    })
+    .catch(function(err) {
+      console.warn('CORS proxies failed, trying direct fetch:', err.message);
+      return tryDirectFetch();
+    })
+    .then(function(data) {
+      _emNewsCache = data;
+      _emNewsCacheTime = Date.now();
+      _emNewsPromise = null;
+      return data;
+    })
+    .catch(function(err) {
+      _emNewsPromise = null;
+      throw err;
+    });
+
+  return _emNewsPromise;
+}
+
+function loadThsNews() {
+  // THS API is blocked ("Nginx forbidden"). Use Sina finance live news as fallback.
+  // Sina API: https://zhibo.sina.com.cn/api/zhibo/feed (zhibo_id=152 = finance)
+  var sinaUrl = 'https://zhibo.sina.com.cn/api/zhibo/feed?page=1&page_size=50&zhibo_id=152&tag_id=0&dire=f&type=0&dpc=1&_=' + Date.now();
+  var proxies = [
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(sinaUrl),
+    'https://corsproxy.io/?url=' + encodeURIComponent(sinaUrl),
+    'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(sinaUrl)
+  ];
+
+  function fetchWithTimeout(url, opts, timeout) {
+    timeout = timeout || 5000;
+    return Promise.race([
+      fetch(url, opts),
+      new Promise(function(_, reject) {
+        setTimeout(function() { reject(new Error('Fetch timeout')); }, timeout);
+      })
+    ]);
+  }
+
+  function tryProxy(index) {
+    if (index >= proxies.length) return Promise.reject(new Error('All Sina proxies failed'));
+    return fetchWithTimeout(proxies[index], { cache: 'no-store' }, 5000)
+      .then(function(resp) {
+        if (!resp.ok) throw new Error('Sina proxy HTTP ' + resp.status);
+        return resp.json();
+      })
+      .then(function(data) {
+        var list = (data && data.result && data.result.data && data.result.data.feed && data.result.data.feed.list) || [];
+        if (list.length === 0) throw new Error('Sina returned empty list');
+        var livesList = list.map(function(item) {
+          var text = item.rich_text || '';
+          var titleMatch = text.match(/^[\u3010]([^\u3011]+)[\u3011]/);
+          var title = titleMatch ? titleMatch[1] : text.substring(0, 30);
+          var digest = titleMatch ? text.replace(/^[\u3010][^\u3011]+[\u3011]/, '') : text;
+          return {
+            title: title,
+            digest: digest,
+            showtime: item.create_time || '',
+            url_w: item.url || '',
+            url_m: item.url || ''
+          };
+        });
+        return { LivesList: livesList };
+      })
+      .catch(function(err) {
+        console.warn('Sina proxy ' + index + ' failed:', err.message);
+        return tryProxy(index + 1);
+      });
+  }
+
+  // Wrap with timeout to prevent hanging
+  return Promise.race([
+    tryProxy(0),
+    new Promise(function(_, reject) {
+      setTimeout(function() { reject(new Error('THS news load timeout')); }, 12000);
+    })
+  ]);
+}
+
+function refreshNews() {
+  if (newsLoading) return;
+  newsLoading = true;
+
+  var btn = document.getElementById('refreshNewsBtn');
+  if (btn) { btn.classList.add('loading'); btn.textContent = '获取中...'; }
+
+  function finish(data, source) {
+    processNewsData(data, source);
+    newsLoading = false;
+    if (btn) { btn.classList.remove('loading'); btn.textContent = '刷新快讯'; }
+    // Also update timeline
+    try { updateTimeline(); } catch(e) { console.error('updateTimeline:', e); }
+  }
+
+  function useCache() {
+    // If NEWS_CACHE is empty, try fetchEnrichedNews as fallback
+    if (!NEWS_CACHE || !NEWS_CACHE.LivesList || NEWS_CACHE.LivesList.length === 0) {
+      fetchEnrichedNews()
+        .then(function(data) {
+          var items = data.items || [];
+          if (items.length > 0) {
+            var livesList = items.map(function(item) {
+              return {
+                title: item.title || '',
+                digest: item.digest || '',
+                showtime: item.time || '',
+                url_w: item.url || '',
+                url_m: item.url || '',
+                _tags: item.tags || []
+              };
+            });
+            finish({ LivesList: livesList }, 'enriched');
+          } else {
+            finish({ LivesList: [] }, 'empty');
+          }
+        })
+        .catch(function() {
+          finish({ LivesList: [] }, 'empty');
+        });
+      return;
+    }
+    finish(NEWS_CACHE, 'cache');
+    var countEl = document.getElementById('newsCount');
+    if (countEl) {
+      var currentText = countEl.textContent;
+      if (currentText.indexOf('受限') < 0) {
+        countEl.innerHTML = currentText + ' <span style="color:var(--orange);font-size:11px;">(实时获取受限，显示缓存)</span>';
+      }
+    }
+    console.log('[News] Using cached data - real-time API not available in this environment');
+  }
+
+  // Try methods: EastMoney script tag JSONP (works on GitHub Pages)
+  // Strategy: Use EastMoney API, fall back to cache if it fails.
+  
+  var triedCount = 0;
+  var doneFirst = false;
+  
+  function tryFinish(data, source) {
+    if (doneFirst) return;
+    doneFirst = true;
+    window._apiWorks = true;
+    finish(data, source);
+  }
+  
+  function onEastMoneyFailed() {
+    if (!doneFirst) {
+      useCache();
+    }
+  }
+  
+  // Attempt: EastMoney script tag JSONP (works on GitHub Pages, Netlify, etc.)
+  loadEastMoneyNews()
+    .then(function(data) {
+      console.log('[News] EastMoney API success, items:', data.LivesList.length);
+      tryFinish(data, 'eastmoney');
+    })
+    .catch(function(err) {
+      console.warn('[News] EastMoney API failed:', err.message);
+      onEastMoneyFailed();
+    });
+}
+
+function processNewsData(data, source) {
+  source = source || 'live';
+  var allItems = normalizeNewsItems(data);
+
+  if (!allItems || allItems.length === 0) {
+    document.getElementById('newsFlashList').innerHTML =
+      '<div class="news-empty">暂无快讯数据</div>';
+    document.getElementById('newsCount').textContent = '暂无数据';
+    return;
+  }
+
+  var futuresItems = [];
+
+  // If items already have _tags (from server-side pre-filtering), use them directly
+  // Otherwise, filter using matchNewsTags
+  for (var i = 0; i < allItems.length; i++) {
+    var item = allItems[i];
+    if (item._tags && item._tags.length > 0) {
+      // Already tagged (from server-side)
+      futuresItems.push(item);
+    } else {
+      var title = item.title || '';
+      var digest = item.digest || '';
+      var tags = matchNewsTags(title, digest);
+      if (tags.length > 0) {
+        item._tags = tags;
+        futuresItems.push(item);
+      }
+    }
+  }
+
+  if (futuresItems.length === 0) {
+    // If no futures-specific news, show top 10 general financial news
+    futuresItems = allItems.slice(0, 10).map(function(item) {
+      item._tags = [{ tag: '财经', cls: 'tag-macro' }];
+      return item;
+    });
+  }
+
+  // Render
+  var html = futuresItems.map(function(item) {
+    var time = (item.showtime || '').substring(11, 16); // HH:MM
+    var date = (item.showtime || '').substring(5, 10); // MM-DD
+    var title = item.title || '';
+    var digest = item.digest || '';
+    var url = item.url_w || item.url_m || '#';
+
+    // Clean digest (remove 【】 prefix)
+    digest = digest.replace(/^[【\[].*?[】\]]/, '');
+
+    // Tag CSS class mapping
+    var tagClassMap = {
+      '能化': 'tag-energy', '有色': 'tag-metals', '黑色': 'tag-black',
+      '农产品': 'tag-agri', '贵金属': 'tag-precious', '宏观': 'tag-macro',
+      '期货': 'tag-futures', '财经': 'tag-macro'
+    };
+    var tagsHtml = (item._tags || []).map(function(t) {
+      var tagName = typeof t === 'string' ? t : t.tag;
+      var tagCls = typeof t === 'string' ? (tagClassMap[tagName] || 'tag-macro') : t.cls;
+      return '<span class="news-tag ' + tagCls + '">' + tagName + '</span>';
+    }).join('');
+
+    return '<div class="news-item news-updated">' +
+      '<div class="news-time">' + date + '<br>' + time + '</div>' +
+      '<div class="news-content">' +
+        '<div class="news-title-row">' +
+          '<a class="news-title" href="' + url + '" target="_blank">' + title + '</a>' +
+          tagsHtml +
+        '</div>' +
+        (digest ? '<div class="news-digest">' + digest.substring(0, 120) + '</div>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  document.getElementById('newsFlashList').innerHTML = html;
+  document.getElementById('newsDot').classList.add('active');
+
+  var now = new Date();
+  var ts = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  var sourceLabel = source === 'cache' ? '缓存于' : '更新于';
+  document.getElementById('newsCount').textContent =
+    futuresItems.length + ' 条期货关联快讯 · ' + sourceLabel + ' ' + ts;
+
+  // Remove flash animation after 1s
+  setTimeout(function() {
+    document.querySelectorAll('.news-item.news-updated').forEach(function(el) {
+      el.classList.remove('news-updated');
+    });
+  }, 1000);
+}
+
+
+// ===== Live Price Data =====
+let livePriceData = {};
+let refreshInProgress = false;
+let newsLoading = false;
+let newsRefreshTimer = null;
+
+// ===== Build Initial Ticker =====
+function buildInitialTicker() {
+  var ticker = document.getElementById('liveTicker');
+  if (!ticker) return;
+  var html = FUTURES_CONTRACTS.filter(function(c) { return !c.hidden; }).map(function(c) {
+    var priceEl = document.querySelector('[data-live-price="' + c.code + '"]');
+    var chgpctEl = document.querySelector('[data-live-chgpct="' + c.code + '"]');
+    var priceStr = '—';
+    var chgStr = '—';
+    var chgClass = 'flat';
+    if (priceEl) priceStr = priceEl.textContent.trim();
+    if (chgpctEl) {
+      chgStr = chgpctEl.textContent.trim();
+      if (chgStr.indexOf('+') >= 0) chgClass = 'up';
+      else if (chgStr.indexOf('-') >= 0 && chgStr !== '—') chgClass = 'down';
+    }
+    return '<a href="https://quote.eastmoney.com/qihuo/' + c.url + '.html" target="_blank">' +
+      '<div class="ticker-item" id="tick-' + c.url + '">' +
+      '<div class="ticker-name">' + c.name + '</div>' +
+      '<div class="ticker-code">' + c.code + '</div>' +
+      '<div class="ticker-price ' + chgClass + '">' + priceStr + '</div>' +
+      '<div class="ticker-chg ' + chgClass + '">' + chgStr + '</div>' +
+      '</div></a>';
+  }).join('');
+  ticker.innerHTML = html;
+}
+
+// ===== Refresh Live Prices =====
+async function refreshLivePrices() {
+  if (refreshInProgress) return;
+  refreshInProgress = true;
+  var btn = document.getElementById('refreshBtn');
+  if (btn) {
+    btn.classList.add('loading');
+    btn.querySelector('span:last-child').textContent = '正在获取...';
+  }
+  var ticker = document.getElementById('liveTicker');
+  var tickerDot = document.getElementById('tickerDot');
+  if (tickerDot) tickerDot.classList.remove('active');
+
+  if (ticker && marketOpen) {
+    ticker.innerHTML = FUTURES_CONTRACTS.filter(c => !c.hidden).map(c =>
+      '<div class="ticker-item loading-state" id="tick-' + c.url + '">' +
+      '<div class="ticker-name">' + c.name + '</div>' +
+      '<div class="ticker-code">' + c.code + '</div>' +
+      '<div class="ticker-price">获取中...</div>' +
+      '<div class="ticker-chg flat">—</div>' +
+      '</div>'
+    ).join('');
+  }
+
+  var total = FUTURES_CONTRACTS.length;
+  var fetchOne = function(contract) {
+    var secid = SECID_MAP[contract.code];
+    if (!secid) return Promise.resolve(null);
+    var url = 'https://push2.eastmoney.com/api/qt/stock/get' +
+      '?secid=' + encodeURIComponent(secid) +
+      '&fields=f43,f44,f45,f46,f57,f58,f60,f169,f170';
+    return jsonpFetch(url, null, 15000)
+      .then(function(resp) {
+        if (!resp || !resp.data) return readDomFallback(contract);
+        var d = resp.data;
+        var rawPrice = parseFloat(d.f43) || 0;
+        var rawPrevClose = parseFloat(d.f60) || 0;
+        if (rawPrice <= 0 && rawPrevClose > 0) rawPrice = rawPrevClose;
+        if (rawPrice <= 0) return readDomFallback(contract);
+        var scale = Math.pow(10, contract.dec);
+        return {
+          name: contract.name, code: contract.code, url: contract.url,
+          price: rawPrice / scale, high: (parseFloat(d.f44) || 0) / scale,
+          low: (parseFloat(d.f45) || 0) / scale, open: (parseFloat(d.f46) || 0) / scale,
+          prevSettle: rawPrevClose / scale, settle: 0,
+          chgAmt: (parseFloat(d.f169) || 0) / scale,
+          chgPct: (parseFloat(d.f170) || 0) / 100,
+          decimal: contract.dec, fetchTime: new Date()
+        };
+      })
+      .catch(function(err) {
+        console.warn('Fetch failed for ' + contract.code + ': ' + err.message);
+        return readDomFallback(contract);
+      });
+  };
+
+  // Read hardcoded price from DOM when API is unavailable (market closed)
+  function readDomFallback(contract) {
+    var priceEl = document.querySelector('[data-live-price="' + contract.code + '"]');
+    var chgEl = document.querySelector('[data-live-chgpct="' + contract.code + '"]');
+    if (!priceEl) return null;
+    var priceText = priceEl.textContent.replace(/,/g, '');
+    var price = parseFloat(priceText);
+    if (isNaN(price) || price <= 0) return null;
+    var chgText = chgEl ? chgEl.textContent : '';
+    var chgPct = 0;
+    var m = chgText.match(/([+-]?[\d.]+)%/);
+    if (m) chgPct = parseFloat(m[1]);
+    return {
+      name: contract.name, code: contract.code, url: contract.url,
+      price: price, high: 0, low: 0, open: 0,
+      prevSettle: 0, settle: 0,
+      chgAmt: 0, chgPct: chgPct,
+      decimal: contract.dec, fetchTime: new Date(), _domFallback: true
+    };
+  }
+
+  var promises = FUTURES_CONTRACTS.map(function(c) { return fetchOne(c); });
+  try {
+    var results = await Promise.all(promises);
+    results.forEach(function(data, idx) {
+      if (data) livePriceData[FUTURES_CONTRACTS[idx].code] = data;
+    });
+    try { FUTURES_CONTRACTS.filter(c => !c.hidden).forEach(c => updateTickerItem(c)); } catch(e) { console.error(e); }
+    try { applyLivePricesToPage(); } catch(e) { console.error(e); }
+    try { updateGoldGuidePrices(); } catch(e) { console.error(e); }
+    try { updateMarketDashboard(); } catch(e) { console.error('updateMarketDashboard:', e); }
+    try { updateSourceLinks(); } catch(e) { console.error('updateSourceLinks:', e); }
+    finishRefresh(total);
+  } catch(err) {
+    console.error('Price refresh failed:', err);
+    var hasCached = Object.keys(livePriceData).length > 0;
+    FUTURES_CONTRACTS.filter(c => !c.hidden).forEach(c => {
+      var cached = livePriceData[c.code];
+      if (cached) { updateTickerItem(c); }
+      else {
+        var el = document.getElementById('tick-' + c.url);
+        if (el) {
+          el.classList.remove('loading-state');
+          el.querySelector('.ticker-price').textContent = '—';
+          el.querySelector('.ticker-price').className = 'ticker-price flat';
+        }
+      }
+    });
+    if (hasCached) {
+      try { applyLivePricesToPage(); } catch(e) { console.error(e); }
+      try { updateGoldGuidePrices(); } catch(e) { console.error(e); }
+      try { updateMarketDashboard(); } catch(e) { console.error(e); }
+      try { updateSourceLinks(); } catch(e) { console.error(e); }
+    }
+    finishRefresh(total);
+  }
+}
+
+function updateTickerItem(contract) {
+  var el = document.getElementById('tick-' + contract.url);
+  if (!el) return;
+  var data = livePriceData[contract.code];
+  if (!data) {
+    el.classList.remove('loading-state');
+    el.querySelector('.ticker-price').textContent = '—';
+    el.querySelector('.ticker-price').className = 'ticker-price flat';
+    return;
+  }
+  el.classList.remove('loading-state');
+  el.classList.add('ticker-updated');
+  var chgClass = data.chgPct > 0 ? 'up' : (data.chgPct < 0 ? 'down' : 'flat');
+  var sign = data.chgPct > 0 ? '+' : '';
+  var priceStr = data.decimal > 0 ? data.price.toFixed(data.decimal) : Math.round(data.price).toLocaleString();
+  var chgStr = sign + data.chgPct.toFixed(2) + '%';
+  el.innerHTML = '<a href="https://quote.eastmoney.com/qihuo/' + contract.url + '.html" target="_blank">' +
+    '<div class="ticker-item" id="tick-' + contract.url + '">' +
+    '<div class="ticker-name">' + contract.name + '</div>' +
+    '<div class="ticker-code">' + contract.code + '</div>' +
+    '<div class="ticker-price ' + chgClass + '">' + priceStr + '</div>' +
+    '<div class="ticker-chg ' + chgClass + '">' + chgStr + '</div>' +
+    '</div></a>';
+}
+
+function applyLivePricesToPage() {
+  document.querySelectorAll('[data-live-price]').forEach(function(el) {
+    var code = el.getAttribute('data-live-price');
+    var data = livePriceData[code];
+    if (!data) return;
+    var priceStr = data.decimal > 0 ? data.price.toFixed(data.decimal) : Math.round(data.price).toLocaleString();
+    if (el.textContent !== priceStr) { el.textContent = priceStr; el.classList.add('ticker-updated'); setTimeout(function() { el.classList.remove('ticker-updated'); }, 600); }
+  });
+  document.querySelectorAll('[data-live-chgpct]').forEach(function(el) {
+    var code = el.getAttribute('data-live-chgpct');
+    var data = livePriceData[code];
+    if (!data) return;
+    var sign = data.chgPct > 0 ? '+' : '';
+    var chgStr = sign + data.chgPct.toFixed(2) + '%';
+    if (el.textContent !== chgStr) {
+      el.textContent = chgStr;
+      el.classList.remove('up', 'down', 'flat');
+      if (data.chgPct > 0) el.classList.add('up');
+      else if (data.chgPct < 0) el.classList.add('down');
+      else el.classList.add('flat');
+    }
+  });
+  document.querySelectorAll('[data-live-chgamt]').forEach(function(el) {
+    var code = el.getAttribute('data-live-chgamt');
+    var data = livePriceData[code];
+    if (!data) return;
+    var sign = data.chgAmt > 0 ? '+' : '';
+    var amtStr = sign + (data.decimal > 0 ? data.chgAmt.toFixed(data.decimal) : Math.round(data.chgAmt).toLocaleString());
+    if (el.textContent !== amtStr) {
+      el.textContent = amtStr;
+      el.classList.remove('up', 'down', 'flat');
+      if (data.chgAmt > 0) el.classList.add('up');
+      else if (data.chgAmt < 0) el.classList.add('down');
+      else el.classList.add('flat');
+    }
+  });
+  document.querySelectorAll('[data-live-range]').forEach(function(el) {
+    var code = el.getAttribute('data-live-range');
+    var data = livePriceData[code];
+    if (!data) return;
+    var fmt = data.decimal > 0 ? function(v) { return v.toFixed(data.decimal); } : function(v) { return Math.round(v).toLocaleString(); };
+    var unit = el.getAttribute('data-live-unit') || '';
+    el.textContent = '开盘' + fmt(data.open) + ' · 最高' + fmt(data.high) + ' · 最低' + fmt(data.low) + (unit ? ' · ' + unit : '');
+  });
+}
+
+function updateGoldGuidePrices() {
+  var auData = livePriceData['AU2610'];
+  if (!auData) return;
+  var auPrice = auData.price;
+  var fmt = function(v) { return Math.round(v).toLocaleString(); };
+  var derivations = {
+    'sge': auPrice - 2, 'autd': auPrice - 4,
+    'bank-low': auPrice + 15, 'bank-high': auPrice + 32,
+    'bank-icbc': auPrice + 23, 'bank-ccb': auPrice + 20,
+    'bank-citic': auPrice + 15, 'bank-spdb': auPrice + 32,
+    'shuibei': auPrice + 160, 'brand-low': auPrice + 340,
+    'brand-high': auPrice + 360, 'brand-chow': auPrice + 360,
+    'brand-laofeng': auPrice + 340, 'brand-caibai': auPrice + 325,
+    'recycle-low': auPrice - 20, 'recycle-high': auPrice - 12,
+  };
+  document.querySelectorAll('[data-gold-derive]').forEach(function(el) {
+    var key = el.getAttribute('data-gold-derive');
+    if (key === 'loss-per-gram') { el.textContent = fmt(380); }
+    else if (key === 'comex') {
+      var gcData = livePriceData['GCSPT'];
+      el.textContent = (gcData && gcData.price > 0) ? gcData.price.toFixed(2) : (el.textContent || '—');
+    }
+    else if (derivations[key] !== undefined) {
+      el.textContent = fmt(derivations[key]);
+      el.classList.add('ticker-updated');
+      setTimeout(function() { el.classList.remove('ticker-updated'); }, 600);
+    }
+  });
+  var spreadEl = document.getElementById('goldSpreadText');
+  if (spreadEl) spreadEl.textContent = fmt(380) + '元';
+  var statusEl = document.getElementById('goldGuideStatus');
+  if (statusEl) {
+    var now = new Date();
+    var ts = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    statusEl.textContent = marketOpen ? ('· 沪金' + auPrice.toFixed(2) + '元/克 · 更新于 ' + ts) : ('· 沪金' + auPrice.toFixed(2) + '元/克 · 收盘价(休市中)');
+  }
+}
+
+function finishRefresh(total) {
+  refreshInProgress = false;
+  var btn = document.getElementById('refreshBtn');
+  if (btn) { btn.classList.remove('loading'); btn.querySelector('span:last-child').textContent = '刷新实时数据'; }
+  var success = Object.keys(livePriceData).length;
+  var now = new Date();
+  var ts = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  var el = document.getElementById('lastRefreshTime');
+  if (el) el.textContent = '更新于 ' + ts + ' · ' + success + '/' + total + '个品种';
+  var dot = document.getElementById('tickerDot');
+  if (dot) dot.classList.add('active');
+  // Re-render personal modules with fresh data
+  try { renderPersonalModules(); } catch(e) { console.error('renderPersonalModules:', e); }
+  try { renderCoreEvents(); } catch(e) { console.error('renderCoreEvents:', e); }
+}
+
+
+// Initialize page
+updatePageDate();
+buildInitialTicker();
+updateSourceLinks();
+renderCoreEvents();
+// Render personal modules with live data
+renderPersonalModules();
+setTimeout(function() {
+  refreshLivePrices();
+  renderCoreEvents();
+  // Re-render personal modules after prices load
+  setTimeout(function() { renderPersonalModules(); }, 3000);
+}, marketOpen ? 2000 : 0);
+
+// Auto-load news on page load: try fetchEnrichedNews first, then refresh live
+fetchEnrichedNews()
+  .then(function(data) {
+    var items = data.items || [];
+    if (items.length > 0) {
+      var livesList = items.map(function(item) {
+        return {
+          title: item.title || '',
+          digest: item.digest || '',
+          showtime: item.time || '',
+          url_w: item.url || '',
+          url_m: item.url || '',
+          _tags: item.tags || []
+        };
+      });
+      processNewsData({ LivesList: livesList }, 'enriched');
+    }
+  })
+  .catch(function() {
+    processNewsData(NEWS_CACHE, 'cache');
+  });
+// Try immediately AND retry after 1s in case of network timing issues
+refreshNews();
+// Also update timeline independently (uses fetchEnrichedNews directly)
+updateTimeline();
+setTimeout(function() {
+  refreshNews();
+  updateTimeline(); // retry timeline in case first attempt failed
+}, 1500);
+
+// Start news auto-refresh on page load if checkbox is checked (default: checked)
+setTimeout(function() {
+  if (document.getElementById('newsAutoRefresh').checked) {
+    startNewsAutoRefresh();
+  }
+}, 2000);
+
+// Page-level auto-reload fallback: if API is blocked (e.g., in sandboxed preview),
+// reload the page every 60 seconds to get fresh cached data from server.
+// This is a last-resort fallback when real-time fetching is not possible.
+setTimeout(function() {
+  // Only enable page reload if we detect the API doesn't work
+  var pageReloadTimer = null;
+  var checkApiAndEnableReload = function() {
+    if (!window._apiWorks) {
+      // API doesn't work in this environment - enable page reload
+      if (!pageReloadTimer) {
+        pageReloadTimer = setInterval(function() {
+          // Only reload if user hasn't interacted recently (to avoid interrupting reading)
+          var lastInteraction = window._lastUserInteraction || 0;
+          if (Date.now() - lastInteraction > 30000) { // 30s since last interaction
+            location.reload();
+          }
+        }, 60000);
+      }
+    }
+  };
+  // Check after 15 seconds (enough time for API attempts to fail)
+  setTimeout(checkApiAndEnableReload, 15000);
+}, 5000);
+
+// Track user interactions to avoid reload during reading
+document.addEventListener('click', function() { window._lastUserInteraction = Date.now(); });
+document.addEventListener('scroll', function() { window._lastUserInteraction = Date.now(); });
+document.addEventListener('keydown', function() { window._lastUserInteraction = Date.now(); });
+
+// Auto-refresh news every 60 seconds (if auto-refresh is on)
+function startNewsAutoRefresh() {
+  if (newsRefreshTimer) clearInterval(newsRefreshTimer);
+  newsRefreshTimer = setInterval(refreshNews, 60000);
+}
+
+// Independent news/events auto-refresh toggle (works even when market is closed)
+function toggleNewsAutoRefresh() {
+  var checked = document.getElementById('newsAutoRefresh').checked;
+  if (checked) {
+    refreshNews();
+    startNewsAutoRefresh();
+  } else {
+    if (newsRefreshTimer) { clearInterval(newsRefreshTimer); newsRefreshTimer = null; }
+  }
+}
+
+// === Smart page refresh on open ===
+// Whenever the page is opened, check if the hardcoded data is stale.
+// If the page title date doesn't match today, do a full reload to get fresh data.
+(function() {
+  var now = new Date();
+  var todayStr = now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日';
+  // Check if the page title shows an old date
+  var titleEl = document.querySelector('.main-title');
+  var pageDate = titleEl ? titleEl.textContent.match(/\d{4}年\d{1,2}月\d{1,2}日/) : null;
+  if (pageDate && pageDate[0] !== todayStr) {
+    // Page data is from a previous day — force reload to get fresh data
+    location.reload();
+    return; // stop executing anything else
+  }
+  // Also reload if last reload was more than 12 hours ago and market is about to open
+  var lastFullReload = sessionStorage.getItem('lastFullPageReload');
+  var nowTs = Date.now();
+  if (lastFullReload && (nowTs - parseInt(lastFullReload)) > 12 * 3600 * 1000) {
+    sessionStorage.setItem('lastFullPageReload', String(nowTs));
+    location.reload();
+    return;
+  }
+  if (!lastFullReload) {
+    sessionStorage.setItem('lastFullPageReload', String(nowTs));
+  }
+})();
+</script>
+
+</body>
+</html>
