@@ -2698,8 +2698,31 @@ function fetchEnrichedNews() {
     return Math.max(0, Math.min(5, score));
   }
 
+  // Fetch EastMoney via direct fetch (more reliable on mobile than JSONP script tag)
+  function fetchEastMoneyDirect() {
+    var emUrl = 'https://newsapi.eastmoney.com/kuaixun/v1/getlist_101_ajaxResult_50_1_.html?_=' + Date.now();
+    return fetch(emUrl, { cache: 'no-store' })
+      .then(function(r) {
+        if (!r.ok) throw new Error('EM fetch HTTP ' + r.status);
+        return r.text();
+      })
+      .then(function(text) {
+        var data = parseEastMoneyText(text);
+        if (data && data.LivesList && data.LivesList.length) return data;
+        throw new Error('EM fetch returned empty/invalid');
+      });
+  }
+
+  // Try EastMoney via script tag (desktop), fallback to direct fetch (mobile-friendly)
+  function fetchEastMoneyNews() {
+    return loadEastMoneyNews().catch(function(err) {
+      console.warn('[fetchEnrichedNews] JSONP failed, trying direct fetch:', err.message);
+      return fetchEastMoneyDirect();
+    });
+  }
+
   // Main: fetch from EastMoney and WallStreet CN, merge, tag, score
-  return loadEastMoneyNews()
+  return fetchEastMoneyNews()
     .then(function(emData) {
       var emItems = (emData && emData.LivesList) || [];
       // Map EastMoney items to enriched format
@@ -3066,8 +3089,9 @@ function refreshNews() {
   }
 
   function useCache() {
-    // If NEWS_CACHE is empty, try fetchEnrichedNews as fallback
+    // If NEWS_CACHE is empty, try fetching from WallStreet CN directly (mobile-friendly, CORS-enabled)
     if (!NEWS_CACHE || !NEWS_CACHE.LivesList || NEWS_CACHE.LivesList.length === 0) {
+      // First try fetchEnrichedNews (which tries JSONP then direct fetch)
       fetchEnrichedNews()
         .then(function(data) {
           var items = data.items || [];
@@ -3088,7 +3112,34 @@ function refreshNews() {
           }
         })
         .catch(function() {
-          finish({ LivesList: [] }, 'empty');
+          // Last resort: try WallStreet CN API directly
+          var wsUrl = 'https://api-one-wscn.awtmt.com/apiv1/content/lives?channel=commodity-channel&limit=30';
+          fetch(wsUrl, { cache: 'no-store' })
+            .then(function(r) { if (!r.ok) throw new Error('WS HTTP ' + r.status); return r.json(); })
+            .then(function(data) {
+              var wsItems = (data && data.data && data.data.items) || [];
+              var livesList = wsItems.map(function(item) {
+                var showtime = item.display_time || '';
+                if (showtime && !isNaN(showtime)) {
+                  var d = new Date(parseInt(showtime) * 1000);
+                  var pad = function(n) { return n < 10 ? '0' + n : n; };
+                  showtime = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' +
+                             pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+                }
+                return {
+                  title: item.title || '',
+                  digest: item.content_text || '',
+                  showtime: showtime,
+                  url_w: item.id ? 'https://wallstreetcn.com/livenews/' + item.id : '',
+                  url_m: '',
+                  _tags: matchNewsTags(item.title || '', item.content_text || '')
+                };
+              });
+              finish({ LivesList: livesList }, 'wallstreet');
+            })
+            .catch(function() {
+              finish({ LivesList: [] }, 'empty');
+            });
         });
       return;
     }
