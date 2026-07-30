@@ -2560,20 +2560,30 @@ function updateTimeline() {
   fetchEnrichedNews()
     .then(function(data) {
       var items = data.items || [];
-      console.log('[Timeline] Got', items.length, 'items from enriched_news.json');
+      console.log('[Timeline] Got', items.length, 'items from fetchEnrichedNews');
       if (items.length === 0) {
         timelineEl.innerHTML = '<p style="color:var(--text-muted);padding:20px;text-align:center">暂无快讯数据</p>';
         return;
       }
+      // Filter to today's date — show complete day
+      var tlNow = new Date();
+      var tlToday = tlNow.getFullYear() + '-' + String(tlNow.getMonth() + 1).padStart(2, '0') + '-' + String(tlNow.getDate()).padStart(2, '0');
+      var todayItems = items.filter(function(item) {
+        var t = item.time || '';
+        return t.substring(0, 10) === tlToday;
+      });
+      // If too few today items, keep all (night session cross-day)
+      if (todayItems.length < 5) {
+        todayItems = items;
+      }
       // Sort by time descending
-      items.sort(function(a, b) {
+      todayItems.sort(function(a, b) {
         return (b.time || '').localeCompare(a.time || '');
       });
-      // Show top 25 items
-      items = items.slice(0, 25);
+      // Show ALL items for today — no artificial limit
       // Build timeline HTML
       var html = '';
-      items.forEach(function(item) {
+      todayItems.forEach(function(item) {
         var time = (item.time || '').substring(11, 16); // HH:MM
         var title = item.title || '';
         var digest = item.digest || '';
@@ -2592,7 +2602,7 @@ function updateTimeline() {
         '</div>';
       });
       timelineEl.innerHTML = html;
-      console.log('[Timeline] Rendered', items.length, 'timeline items');
+      console.log('[Timeline] Rendered', todayItems.length, 'timeline items (today only)');
     })
     .catch(function(e) {
       console.error('[Timeline] Update failed:', e);
@@ -2621,28 +2631,42 @@ function matchNewsTags(title, digest) {
 var _enrichedNewsCache = null;
 var _enrichedNewsCacheTime = 0;
 function fetchEnrichedNews() {
-  var CACHE_TTL = 60000; // 60 seconds
+  var CACHE_TTL = 30000; // 30 seconds for live data
   if (_enrichedNewsCache && (Date.now() - _enrichedNewsCacheTime) < CACHE_TTL) {
     return Promise.resolve(_enrichedNewsCache);
   }
 
-  // First, try the backend enriched_news.json (works when serve.py is running)
+  // Backend enriched_news.json is a static fallback (updated daily by the build script).
+  // Only use it when live APIs fail. Try jsdelivr CDN first (faster & more CORS-friendly),
+  // then raw.githubusercontent.com.
   function tryBackend() {
-    return fetch('https://raw.githubusercontent.com/huayubo-0701/futures-daily/main/enriched_news.json?t=' + Date.now(), { cache: 'no-store' })
-      .then(function(r) { if (!r.ok) throw new Error('Backend HTTP ' + r.status); return r.json(); })
-      .then(function(data) {
-        if (data && data.items && data.items.length > 0) {
-          _enrichedNewsCache = data;
-          _enrichedNewsCacheTime = Date.now();
-          return data;
-        }
-        throw new Error('Backend returned empty');
-      });
+    var urls = [
+      'https://cdn.jsdelivr.net/gh/huayubo-0701/futures-daily@main/enriched_news.json?t=' + Date.now(),
+      'https://raw.githubusercontent.com/huayubo-0701/futures-daily/main/enriched_news.json?t=' + Date.now()
+    ];
+    function tryUrl(index) {
+      if (index >= urls.length) return Promise.reject(new Error('All backend URLs failed'));
+      return fetch(urls[index], { cache: 'no-store' })
+        .then(function(r) { if (!r.ok) throw new Error('Backend HTTP ' + r.status); return r.json(); })
+        .then(function(data) {
+          if (data && data.items && data.items.length > 0) {
+            _enrichedNewsCache = data;
+            _enrichedNewsCacheTime = Date.now();
+            return data;
+          }
+          throw new Error('Backend returned empty');
+        })
+        .catch(function(err) {
+          console.warn('[fetchEnrichedNews] Backend URL ' + index + ' failed:', err.message);
+          return tryUrl(index + 1);
+        });
+    }
+    return tryUrl(0);
   }
 
   // Fetch from WallStreet CN API
   function fetchWallStreetCN() {
-    var wsUrl = 'https://api-one-wscn.awtmt.com/apiv1/content/lives?channel=commodity-channel&limit=50';
+    var wsUrl = 'https://api-one-wscn.awtmt.com/apiv1/content/lives?channel=commodity-channel&limit=100';
     return Promise.race([
       fetch(wsUrl, { cache: 'no-store' })
         .then(function(r) {
@@ -2714,7 +2738,7 @@ function fetchEnrichedNews() {
 
   // Fetch EastMoney via direct fetch (more reliable on mobile than JSONP script tag)
   function fetchEastMoneyDirect() {
-    var emUrl = 'https://newsapi.eastmoney.com/kuaixun/v1/getlist_101_ajaxResult_50_1_.html?_=' + Date.now();
+    var emUrl = 'https://newsapi.eastmoney.com/kuaixun/v1/getlist_101_ajaxResult_100_1_.html?_=' + Date.now();
     return fetch(emUrl, { cache: 'no-store' })
       .then(function(r) {
         if (!r.ok) throw new Error('EM fetch HTTP ' + r.status);
@@ -2728,23 +2752,73 @@ function fetchEnrichedNews() {
   }
 
   // Try EastMoney via script tag (desktop), fallback to direct fetch (mobile-friendly)
+  // Also fetch page 2 to ensure full-day coverage (page 1 covers ~14 hours, page 2 fills the gap)
   function fetchEastMoneyNews() {
     return loadEastMoneyNews().catch(function(err) {
       console.warn('[fetchEnrichedNews] JSONP failed, trying direct fetch:', err.message);
       return fetchEastMoneyDirect();
+    }).then(function(page1Data) {
+      // Also try to fetch page 2 in parallel to get more items
+      var emUrl2 = 'https://newsapi.eastmoney.com/kuaixun/v1/getlist_101_ajaxResult_100_2_.html?_=' + Date.now();
+      return Promise.race([
+        fetch(emUrl2, { cache: 'no-store' }).then(function(r) { return r.text(); }).then(function(text) {
+          try {
+            var page2Data = parseEastMoneyText(text);
+            if (page2Data && page2Data.LivesList && page2Data.LivesList.length > 0) {
+              // Merge page 1 and page 2
+              page1Data.LivesList = page1Data.LivesList.concat(page2Data.LivesList);
+              console.log('[fetchEnrichedNews] EastMoney page1+page2 merged:', page1Data.LivesList.length, 'items');
+            }
+          } catch(e) { console.warn('[fetchEnrichedNews] Page 2 parse failed:', e.message); }
+          return page1Data;
+        }).catch(function(e) {
+          console.warn('[fetchEnrichedNews] Page 2 fetch failed (non-critical):', e.message);
+          return page1Data;
+        }),
+        new Promise(function(resolve) { setTimeout(function() { resolve(page1Data); }, 5000); })
+      ]);
     });
   }
 
-  // Try backend first (serve.py with enriched_news.json), fallback to frontend APIs
-  return tryBackend().catch(function(backendErr) {
-    console.log('[fetchEnrichedNews] Backend not available, trying frontend APIs:', backendErr.message);
-    return fetchFrontendNews();
-  });
+  // Prefer live frontend APIs (EastMoney + WallStreet CN).
+  // Fall back to the static enriched_news.json only when live APIs fail.
+  return fetchFrontendNews()
+    .then(function(result) {
+      if (result && result.items && result.items.length > 0) {
+        return result;
+      }
+      console.log('[fetchEnrichedNews] Live APIs returned empty, falling back to backend cache');
+      return tryBackend();
+    })
+    .catch(function(frontendErr) {
+      console.log('[fetchEnrichedNews] Live APIs failed, falling back to backend cache:', frontendErr.message);
+      return tryBackend().catch(function(backendErr) {
+        console.error('[fetchEnrichedNews] All sources failed:', backendErr.message);
+        var result = { updateTime: '', total: 0, totalSources: 0, items: [] };
+        _enrichedNewsCache = result;
+        _enrichedNewsCacheTime = Date.now();
+        return result;
+      });
+    });
 
   function fetchFrontendNews() {
-    return fetchEastMoneyNews()
-    .then(function(emData) {
+    // Fetch EastMoney and WallStreet CN in parallel so a single source failure
+    // does not block the other.
+    return Promise.all([
+      fetchEastMoneyNews().catch(function(err) {
+        console.warn('[fetchEnrichedNews] EastMoney failed:', err.message);
+        return { LivesList: [] };
+      }),
+      fetchWallStreetCN().catch(function(err) {
+        console.warn('[fetchEnrichedNews] WallStreet CN failed:', err.message);
+        return [];
+      })
+    ])
+    .then(function(results) {
+      var emData = results[0];
+      var wsItems = results[1];
       var emItems = (emData && emData.LivesList) || [];
+
       // Map EastMoney items to enriched format
       var formattedEm = emItems.map(function(item) {
         var title = item.title || '';
@@ -2764,19 +2838,6 @@ function fetchEnrichedNews() {
         };
       });
 
-      // Fetch WallStreet CN in parallel with already-resolved EastMoney
-      return Promise.all([
-        Promise.resolve(formattedEm),
-        fetchWallStreetCN().catch(function(err) {
-          console.warn('[fetchEnrichedNews] WallStreet CN failed:', err.message);
-          return [];
-        })
-      ]);
-    })
-    .then(function(results) {
-      var emItems = results[0];
-      var wsItems = results[1];
-
       // Tag WallStreet CN items
       wsItems = wsItems.map(function(item) {
         var tags = matchNewsTags(item.title, item.digest).map(function(t) {
@@ -2794,7 +2855,7 @@ function fetchEnrichedNews() {
         };
       });
 
-      var allItems = mergeItems(emItems.concat(wsItems));
+      var allItems = mergeItems(formattedEm.concat(wsItems));
       // Sort by time descending
       allItems.sort(function(a, b) {
         return (b.time || '').localeCompare(a.time || '');
@@ -2824,11 +2885,8 @@ function fetchEnrichedNews() {
     })
     .catch(function(err) {
       console.error('[fetchEnrichedNews] Failed:', err.message);
-      // Return empty result gracefully
-      var result = { updateTime: '', total: 0, totalSources: 0, items: [] };
-      _enrichedNewsCache = result;
-      _enrichedNewsCacheTime = Date.now();
-      return result;
+      // Return empty result so caller can fall back to backend cache
+      return { updateTime: '', total: 0, totalSources: 0, items: [] };
     });
   } // end fetchFrontendNews
 
@@ -2899,18 +2957,20 @@ function loadEastMoneyNews() {
     return Promise.resolve(_emNewsCache);
   }
 
-  var apiUrl = 'https://newsapi.eastmoney.com/kuaixun/v1/getlist_101_ajaxResult_50_1_.html?_=' + Date.now();
+  var apiUrl = 'https://newsapi.eastmoney.com/kuaixun/v1/getlist_101_ajaxResult_100_1_.html?_=' + Date.now();
 
   // Method 1: Script tag JSONP (BEST — no CORS restriction, works everywhere including sandboxed iframes)
-  function tryScriptTag() {
+  function tryScriptTag(attempt) {
+    attempt = attempt || 1;
     return new Promise(function(resolve, reject) {
-      var scriptId = 'newsScriptEastMoney_' + Date.now();
+      var scriptId = 'newsScriptEastMoney_' + Date.now() + '_' + attempt;
       // Clean up any old scripts
       document.querySelectorAll('script[id^="newsScriptEastMoney_"]').forEach(function(s) { s.remove(); });
       window.ajaxResult = undefined;
       var script = document.createElement('script');
       script.id = scriptId;
-      script.src = apiUrl;
+      // Add a small cache-busting param unique to this attempt
+      script.src = apiUrl + '&_attempt=' + attempt;
       script.charset = 'utf-8';
       var resolved = false;
       var loadFailed = false;
@@ -2923,7 +2983,7 @@ function loadEastMoneyNews() {
         } else {
           reject(new Error('Script tag timeout'));
         }
-      }, 8000); // Reduced timeout for faster fallback
+      }, 15000); // Generous timeout; EastMoney can be slow
       script.onload = function() {
         if (resolved) return;
         // Check if ajaxResult was actually set
@@ -2955,43 +3015,7 @@ function loadEastMoneyNews() {
     });
   }
 
-  // Method 2: Try fetch via multiple CORS proxies
-  function tryCorsProxy() {
-    var proxies = [
-      'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiUrl),
-      'https://corsproxy.io/?url=' + encodeURIComponent(apiUrl),
-      'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(apiUrl),
-      'https://cors-anywhere.herokuapp.com/' + apiUrl,
-      'https://proxy.cors.sh/' + apiUrl
-    ];
-    function tryProxy(index) {
-      if (index >= proxies.length) return Promise.reject(new Error('All CORS proxies failed'));
-      var opts = { cache: 'no-store' };
-      if (index === 4) { opts.headers = { 'x-cors-api-key': 'temp_e91465e5dd2aecb1c8cdc8ed7b3a6f0d' }; }
-      return fetch(proxies[index], opts)
-        .then(function(resp) {
-          if (!resp.ok) throw new Error('Proxy HTTP ' + resp.status);
-          return resp.text();
-        })
-        .then(function(text) {
-          var data = parseEastMoneyText(text);
-          if (data && data.LivesList && data.LivesList.length) return data;
-          throw new Error('Proxy returned empty/invalid data');
-        })
-        .catch(function(err) {
-          console.warn('Proxy ' + index + ' (' + proxies[index].substring(0, 40) + '...) failed:', err.message);
-          return tryProxy(index + 1);
-        });
-    }
-    return Promise.race([
-      tryProxy(0),
-      new Promise(function(_, reject) {
-        setTimeout(function() { reject(new Error('CORS proxy timeout')); }, 10000);
-      })
-    ]);
-  }
-
-  // Method 3: Try direct fetch (may work if deployed on certain domains)
+  // Method 2: Try direct fetch (very fast if CORS happens to allow, e.g. browser extensions)
   function tryDirectFetch() {
     return Promise.race([
       fetch(apiUrl, { cache: 'no-store' })
@@ -3010,16 +3034,52 @@ function loadEastMoneyNews() {
     ]);
   }
 
-  // Try methods in order: Script tag (JSONP) → CORS proxy → direct fetch
+  // Method 3: Try fetch via public CORS proxies (last resort; many are unreliable)
+  function tryCorsProxy() {
+    var proxies = [
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiUrl),
+      'https://corsproxy.io/?url=' + encodeURIComponent(apiUrl),
+      'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(apiUrl)
+    ];
+    function tryProxy(index) {
+      if (index >= proxies.length) return Promise.reject(new Error('All CORS proxies failed'));
+      return fetch(proxies[index], { cache: 'no-store' })
+        .then(function(resp) {
+          if (!resp.ok) throw new Error('Proxy HTTP ' + resp.status);
+          return resp.text();
+        })
+        .then(function(text) {
+          var data = parseEastMoneyText(text);
+          if (data && data.LivesList && data.LivesList.length) return data;
+          throw new Error('Proxy returned empty/invalid data');
+        })
+        .catch(function(err) {
+          console.warn('Proxy ' + index + ' (' + proxies[index].substring(0, 40) + '...) failed:', err.message);
+          return tryProxy(index + 1);
+        });
+    }
+    return Promise.race([
+      tryProxy(0),
+      new Promise(function(_, reject) {
+        setTimeout(function() { reject(new Error('CORS proxy timeout')); }, 12000);
+      })
+    ]);
+  }
+
+  // Try methods in order: Script tag (JSONP) with one retry → direct fetch → CORS proxy
   // Script tag is prioritized because it bypasses CORS entirely — works in any environment
-  _emNewsPromise = tryScriptTag()
+  _emNewsPromise = tryScriptTag(1)
     .catch(function(err) {
-      console.warn('Script tag failed, trying CORS proxies:', err.message);
-      return tryCorsProxy();
+      console.warn('Script tag attempt 1 failed, retrying JSONP:', err.message);
+      return tryScriptTag(2);
     })
     .catch(function(err) {
-      console.warn('CORS proxies failed, trying direct fetch:', err.message);
+      console.warn('Script tag failed, trying direct fetch:', err.message);
       return tryDirectFetch();
+    })
+    .catch(function(err) {
+      console.warn('Direct fetch failed, trying CORS proxies:', err.message);
+      return tryCorsProxy();
     })
     .then(function(data) {
       _emNewsCache = data;
@@ -3110,100 +3170,38 @@ function refreshNews() {
     try { updateTimeline(); } catch(e) { console.error('updateTimeline:', e); }
   }
 
-  function useCache() {
-    // If NEWS_CACHE is empty, try fetching from WallStreet CN directly (mobile-friendly, CORS-enabled)
-    if (!NEWS_CACHE || !NEWS_CACHE.LivesList || NEWS_CACHE.LivesList.length === 0) {
-      // First try fetchEnrichedNews (which tries JSONP then direct fetch)
-      fetchEnrichedNews()
-        .then(function(data) {
-          var items = data.items || [];
-          if (items.length > 0) {
-            var livesList = items.map(function(item) {
-              return {
-                title: item.title || '',
-                digest: item.digest || '',
-                showtime: item.time || '',
-                url_w: item.url || '',
-                url_m: item.url || '',
-                _tags: item.tags || []
-              };
-            });
-            finish({ LivesList: livesList }, 'enriched');
-          } else {
-            finish({ LivesList: [] }, 'empty');
-          }
-        })
-        .catch(function() {
-          // Last resort: try WallStreet CN API directly
-          var wsUrl = 'https://api-one-wscn.awtmt.com/apiv1/content/lives?channel=commodity-channel&limit=30';
-          fetch(wsUrl, { cache: 'no-store' })
-            .then(function(r) { if (!r.ok) throw new Error('WS HTTP ' + r.status); return r.json(); })
-            .then(function(data) {
-              var wsItems = (data && data.data && data.data.items) || [];
-              var livesList = wsItems.map(function(item) {
-                var showtime = item.display_time || '';
-                if (showtime && !isNaN(showtime)) {
-                  var d = new Date(parseInt(showtime) * 1000);
-                  var pad = function(n) { return n < 10 ? '0' + n : n; };
-                  showtime = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' +
-                             pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
-                }
-                return {
-                  title: item.title || '',
-                  digest: item.content_text || '',
-                  showtime: showtime,
-                  url_w: item.id ? 'https://wallstreetcn.com/livenews/' + item.id : '',
-                  url_m: '',
-                  _tags: matchNewsTags(item.title || '', item.content_text || '')
-                };
-              });
-              finish({ LivesList: livesList }, 'wallstreet');
-            })
-            .catch(function() {
-              finish({ LivesList: [] }, 'empty');
-            });
-        });
-      return;
-    }
-    finish(NEWS_CACHE, 'cache');
-    var countEl = document.getElementById('newsCount');
-    if (countEl) {
-      var currentText = countEl.textContent;
-      if (currentText.indexOf('受限') < 0) {
-        countEl.innerHTML = currentText + ' <span style="color:var(--orange);font-size:11px;">(实时获取受限，显示缓存)</span>';
-      }
-    }
-    console.log('[News] Using cached data - real-time API not available in this environment');
-  }
-
-  // Try methods: EastMoney script tag JSONP (works on GitHub Pages)
-  // Strategy: Use EastMoney API, fall back to cache if it fails.
-  
-  var triedCount = 0;
-  var doneFirst = false;
-  
-  function tryFinish(data, source) {
-    if (doneFirst) return;
-    doneFirst = true;
-    window._apiWorks = true;
-    finish(data, source);
-  }
-  
-  function onEastMoneyFailed() {
-    if (!doneFirst) {
-      useCache();
-    }
-  }
-  
-  // Attempt: EastMoney script tag JSONP (works on GitHub Pages, Netlify, etc.)
-  loadEastMoneyNews()
+  // Use the unified fetchEnrichedNews() which prefers live APIs and falls back
+  // to the static backend cache only when live sources are unavailable.
+  fetchEnrichedNews()
     .then(function(data) {
-      console.log('[News] EastMoney API success, items:', data.LivesList.length);
-      tryFinish(data, 'eastmoney');
+      var items = data.items || [];
+      if (items.length > 0) {
+        window._apiWorks = true;
+        var livesList = items.map(function(item) {
+          return {
+            title: item.title || '',
+            digest: item.digest || '',
+            showtime: item.time || '',
+            url_w: item.url || '',
+            url_m: item.url || '',
+            _tags: item.tags || []
+          };
+        });
+        finish({ LivesList: livesList }, 'live');
+      } else if (NEWS_CACHE && NEWS_CACHE.LivesList && NEWS_CACHE.LivesList.length > 0) {
+        // Last resort: use the hardcoded in-page cache if available
+        finish(NEWS_CACHE, 'cache');
+      } else {
+        finish({ LivesList: [] }, 'empty');
+      }
     })
     .catch(function(err) {
-      console.warn('[News] EastMoney API failed:', err.message);
-      onEastMoneyFailed();
+      console.error('[News] refreshNews failed:', err);
+      if (NEWS_CACHE && NEWS_CACHE.LivesList && NEWS_CACHE.LivesList.length > 0) {
+        finish(NEWS_CACHE, 'cache');
+      } else {
+        finish({ LivesList: [] }, 'empty');
+      }
     });
 }
 
@@ -3218,41 +3216,48 @@ function processNewsData(data, source) {
     return;
   }
 
-  var futuresItems = [];
+  // Filter to today's date only — show a COMPLETE day, no truncation
+  var now = new Date();
+  var todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+  var todayItems = allItems.filter(function(item) {
+    var t = item.showtime || item.time || '';
+    return t.substring(0, 10) === todayStr || t.indexOf(todayStr.replace(/-/g, '-')) >= 0;
+  });
 
-  // If items already have _tags (from server-side pre-filtering), use them directly
-  // Otherwise, filter using matchNewsTags
-  for (var i = 0; i < allItems.length; i++) {
-    var item = allItems[i];
-    if (item._tags && item._tags.length > 0) {
-      // Already tagged (from server-side)
-      futuresItems.push(item);
-    } else {
+  // If today's items are too few, keep all items (cross-day coverage for night session)
+  if (todayItems.length < 5) {
+    todayItems = allItems;
+  }
+
+  // Tag all items with futures keywords (for display), but show ALL items
+  for (var i = 0; i < todayItems.length; i++) {
+    var item = todayItems[i];
+    if (!item._tags || item._tags.length === 0) {
       var title = item.title || '';
       var digest = item.digest || '';
       var tags = matchNewsTags(title, digest);
-      if (tags.length > 0) {
-        item._tags = tags;
-        futuresItems.push(item);
+      if (tags.length === 0) {
+        tags = [{ tag: '财经', cls: 'tag-macro' }];
       }
+      item._tags = tags;
     }
   }
 
-  if (futuresItems.length === 0) {
-    // If no futures-specific news, show top 10 general financial news
-    futuresItems = allItems.slice(0, 10).map(function(item) {
-      item._tags = [{ tag: '财经', cls: 'tag-macro' }];
-      return item;
-    });
-  }
+  // Sort by time descending (newest first)
+  todayItems.sort(function(a, b) {
+    var ta = a.showtime || a.time || '';
+    var tb = b.showtime || b.time || '';
+    return tb.localeCompare(ta);
+  });
 
-  // Render
-  var html = futuresItems.map(function(item) {
-    var time = (item.showtime || '').substring(11, 16); // HH:MM
-    var date = (item.showtime || '').substring(5, 10); // MM-DD
+  // Render ALL items — no slicing, show complete day
+  var html = todayItems.map(function(item) {
+    var fullTime = item.showtime || item.time || '';
+    var time = fullTime.substring(11, 16); // HH:MM
+    var date = fullTime.substring(5, 10); // MM-DD
     var title = item.title || '';
     var digest = item.digest || '';
-    var url = item.url_w || item.url_m || '#';
+    var url = item.url_w || item.url_m || item.url || '#';
 
     // Clean digest (remove 【】 prefix)
     digest = digest.replace(/^[【\[].*?[】\]]/, '');
@@ -3284,11 +3289,10 @@ function processNewsData(data, source) {
   document.getElementById('newsFlashList').innerHTML = html;
   document.getElementById('newsDot').classList.add('active');
 
-  var now = new Date();
   var ts = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
   var sourceLabel = source === 'cache' ? '缓存于' : '更新于';
   document.getElementById('newsCount').textContent =
-    futuresItems.length + ' 条期货关联快讯 · ' + sourceLabel + ' ' + ts;
+    todayItems.length + ' 条快讯 · ' + sourceLabel + ' ' + ts;
 
   // Remove flash animation after 1s
   setTimeout(function() {
@@ -3607,14 +3611,10 @@ fetchEnrichedNews()
   .catch(function() {
     processNewsData(NEWS_CACHE, 'cache');
   });
-// Try immediately AND retry after 1s in case of network timing issues
+// Load news immediately on page load
 refreshNews();
 // Also update timeline independently (uses fetchEnrichedNews directly)
 updateTimeline();
-setTimeout(function() {
-  refreshNews();
-  updateTimeline(); // retry timeline in case first attempt failed
-}, 1500);
 
 // Start news auto-refresh on page load if checkbox is checked (default: checked)
 setTimeout(function() {
@@ -3623,28 +3623,30 @@ setTimeout(function() {
   }
 }, 2000);
 
-// Page-level auto-reload fallback: if API is blocked (e.g., in sandboxed preview),
-// reload the page every 60 seconds to get fresh cached data from server.
-// This is a last-resort fallback when real-time fetching is not possible.
+// Page-level data retry fallback: if API is blocked (e.g., in sandboxed preview),
+// retry fetching data every 60 seconds instead of reloading the page.
+// On static hosting (GitHub Pages), location.reload() just loads the same page,
+// so retrying the fetch is more effective and less disruptive.
 setTimeout(function() {
-  // Only enable page reload if we detect the API doesn't work
-  var pageReloadTimer = null;
-  var checkApiAndEnableReload = function() {
+  var retryTimer = null;
+  var checkApiAndRetry = function() {
     if (!window._apiWorks) {
-      // API doesn't work in this environment - enable page reload
-      if (!pageReloadTimer) {
-        pageReloadTimer = setInterval(function() {
-          // Only reload if user hasn't interacted recently (to avoid interrupting reading)
+      // API doesn't work in this environment - retry fetches periodically
+      if (!retryTimer) {
+        retryTimer = setInterval(function() {
+          // Only retry if user hasn't interacted recently (to avoid interrupting reading)
           var lastInteraction = window._lastUserInteraction || 0;
           if (Date.now() - lastInteraction > 30000) { // 30s since last interaction
-            location.reload();
+            console.log('[Retry] API not working, retrying data fetch...');
+            refreshNews();
+            refreshLivePrices();
           }
         }, 60000);
       }
     }
   };
   // Check after 15 seconds (enough time for API attempts to fail)
-  setTimeout(checkApiAndEnableReload, 15000);
+  setTimeout(checkApiAndRetry, 15000);
 }, 5000);
 
 // Track user interactions to avoid reload during reading
@@ -3652,10 +3654,10 @@ document.addEventListener('click', function() { window._lastUserInteraction = Da
 document.addEventListener('scroll', function() { window._lastUserInteraction = Date.now(); });
 document.addEventListener('keydown', function() { window._lastUserInteraction = Date.now(); });
 
-// Auto-refresh news every 60 seconds (if auto-refresh is on)
+// Auto-refresh news every 30 seconds (if auto-refresh is on)
 function startNewsAutoRefresh() {
   if (newsRefreshTimer) clearInterval(newsRefreshTimer);
-  newsRefreshTimer = setInterval(refreshNews, 60000);
+  newsRefreshTimer = setInterval(refreshNews, 30000);
 }
 
 // Independent news/events auto-refresh toggle (works even when market is closed)
@@ -3671,28 +3673,50 @@ function toggleNewsAutoRefresh() {
 
 // === Smart page refresh on open ===
 // Whenever the page is opened, check if the hardcoded data is stale.
-// If the page title date doesn't match today, do a full reload to get fresh data.
+// If the page title date doesn't match today, update the date display and refresh
+// dynamic data (live prices, news). Do NOT location.reload() — on static hosting
+// (GitHub Pages) the HTML never changes, so reload would cause an infinite loop.
 (function() {
   var now = new Date();
   var todayStr = now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日';
-  // Check if the page title shows an old date
   var titleEl = document.querySelector('.main-title');
   var pageDate = titleEl ? titleEl.textContent.match(/\d{4}年\d{1,2}月\d{1,2}日/) : null;
   if (pageDate && pageDate[0] !== todayStr) {
-    // Page data is from a previous day — force reload to get fresh data
-    location.reload();
-    return; // stop executing anything else
-  }
-  // Also reload if last reload was more than 12 hours ago and market is about to open
-  var lastFullReload = sessionStorage.getItem('lastFullPageReload');
-  var nowTs = Date.now();
-  if (lastFullReload && (nowTs - parseInt(lastFullReload)) > 12 * 3600 * 1000) {
-    sessionStorage.setItem('lastFullPageReload', String(nowTs));
-    location.reload();
+    // Page content is from a previous day — update date display, refresh live data
+    console.log('[PageDate] Stale content: page=' + pageDate[0] + ' today=' + todayStr);
+    updatePageDate();
+    // Clear caches so fresh data is fetched
+    _personalNewsCache = null;
+    _emNewsCache = null;
+    _emNewsCacheTime = 0;
+    livePriceData = {};
+    // Mark today's date so checkDayChange doesn't double-trigger
+    _lastDateStr = now.getFullYear() + '-' + (now.getMonth()+1) + '-' + now.getDate();
+    // Show a non-intrusive notice that the report body is from a previous day
+    var notice = document.createElement('div');
+    notice.id = 'staleNotice';
+    notice.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(90deg,#f59e0b,#f97316);color:#fff;text-align:center;padding:8px 16px;font-size:13px;font-weight:500;box-shadow:0 2px 8px rgba(0,0,0,.2);';
+    notice.innerHTML = '⚠️ 报告正文为 ' + pageDate[0] + ' 生成，实时行情与快讯已自动更新至今日。如需当日完整报告，请等待每日 9:30 自动生成。';
+    document.body.insertBefore(notice, document.body.firstChild);
+    document.body.style.marginTop = '40px';
+    // Refresh live data after a short delay (let the page finish initial render)
+    setTimeout(function() {
+      refreshLivePrices();
+      refreshNews();
+      updateTimeline();
+    }, 500);
     return;
   }
+  // Record session timestamp (for tracking, no reload needed on static hosting)
+  var lastFullReload = sessionStorage.getItem('lastFullPageReload');
+  var nowTs = Date.now();
   if (!lastFullReload) {
     sessionStorage.setItem('lastFullPageReload', String(nowTs));
+  } else if ((nowTs - parseInt(lastFullReload)) > 12 * 3600 * 1000) {
+    // 12+ hours since last visit — just refresh data, don't reload page
+    sessionStorage.setItem('lastFullPageReload', String(nowTs));
+    refreshLivePrices();
+    refreshNews();
   }
 })();
 </script>
