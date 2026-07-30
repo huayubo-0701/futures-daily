@@ -2626,6 +2626,20 @@ function fetchEnrichedNews() {
     return Promise.resolve(_enrichedNewsCache);
   }
 
+  // First, try the backend enriched_news.json (works when serve.py is running)
+  function tryBackend() {
+    return fetch('https://raw.githubusercontent.com/huayubo-0701/futures-daily/main/enriched_news.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function(r) { if (!r.ok) throw new Error('Backend HTTP ' + r.status); return r.json(); })
+      .then(function(data) {
+        if (data && data.items && data.items.length > 0) {
+          _enrichedNewsCache = data;
+          _enrichedNewsCacheTime = Date.now();
+          return data;
+        }
+        throw new Error('Backend returned empty');
+      });
+  }
+
   // Fetch from WallStreet CN API
   function fetchWallStreetCN() {
     var wsUrl = 'https://api-one-wscn.awtmt.com/apiv1/content/lives?channel=commodity-channel&limit=50';
@@ -2721,8 +2735,14 @@ function fetchEnrichedNews() {
     });
   }
 
-  // Main: fetch from EastMoney and WallStreet CN, merge, tag, score
-  return fetchEastMoneyNews()
+  // Try backend first (serve.py with enriched_news.json), fallback to frontend APIs
+  return tryBackend().catch(function(backendErr) {
+    console.log('[fetchEnrichedNews] Backend not available, trying frontend APIs:', backendErr.message);
+    return fetchFrontendNews();
+  });
+
+  function fetchFrontendNews() {
+    return fetchEastMoneyNews()
     .then(function(emData) {
       var emItems = (emData && emData.LivesList) || [];
       // Map EastMoney items to enriched format
@@ -2810,6 +2830,8 @@ function fetchEnrichedNews() {
       _enrichedNewsCacheTime = Date.now();
       return result;
     });
+  } // end fetchFrontendNews
+
 }
 
 // Normalize news items from EastMoney / 10jqka / cache
